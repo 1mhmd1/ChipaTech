@@ -96,7 +96,7 @@ export function PartnerTradeDetailPage() {
                   Net profit shown — internal split is not displayed
                 </p>
               </header>
-              <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-ink-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 sm:divide-x divide-ink-100">
                 <div className="p-5">
                   <div className="text-xs uppercase tracking-wide text-ink-500 font-semibold">
                     Investment

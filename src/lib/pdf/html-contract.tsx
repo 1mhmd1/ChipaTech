@@ -45,47 +45,76 @@ export function ContractHTML({
 
   return (
     <article className="contract-doc">
-      {/* — page setup — kept inline so the print route is self-contained */}
+      {/* — page setup — kept inline so the print route is self-contained.
+          Mobile-first: the doc shrinks to fit the viewport on phones,
+          locks to 210mm A4 in print, and uses 1fr columns below 640px
+          so two-column sections stack readably. */}
       <style>{`
         @page { size: A4; margin: 18mm 16mm; }
-        @media print {
-          body { background: white !important; }
-          .no-print { display: none !important; }
-          .contract-doc { box-shadow: none !important; margin: 0 !important; }
-        }
         .contract-doc {
           font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           color: #1d2230;
           font-size: 11pt;
           line-height: 1.45;
           background: #ffffff;
-          padding: 28mm 22mm 24mm;
+          padding: 16px 14px;
           width: 210mm;
-          min-height: 297mm;
+          max-width: 100%;
+          min-height: auto;
           margin: 0 auto;
           box-sizing: border-box;
         }
-        .contract-doc h1 { font-size: 20pt; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+        .contract-doc h1 { font-size: 18pt; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
         .contract-doc h2 { font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 8px; color: #0f1320; border-bottom: 1px solid #1d2230; padding-bottom: 4px; }
         .contract-doc table { width: 100%; border-collapse: collapse; }
         .contract-doc th, .contract-doc td { padding: 8px 10px; vertical-align: top; }
-        .contract-doc .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-        .contract-doc .row { display: flex; justify-content: space-between; gap: 20px; }
+        /* Mobile-default: stack 2-col grids */
+        .contract-doc .grid-2 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        .contract-doc .signatures { margin-top: 30px; display: grid; grid-template-columns: 1fr; gap: 24px; }
+        .contract-doc .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
         .contract-doc .muted { color: #5e6577; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
         .contract-doc .field { margin-bottom: 6px; }
         .contract-doc .field-label { color: #5e6577; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 1px; }
-        .contract-doc .field-value { color: #1d2230; font-size: 10.5pt; }
+        .contract-doc .field-value { color: #1d2230; font-size: 10.5pt; word-wrap: break-word; }
         .contract-doc .product-table { border-collapse: collapse; margin-top: 8px; }
-        .contract-doc .product-table th { background: #f7f8fa; border-bottom: 2px solid #1d2230; text-align: left; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.05em; color: #434a5c; }
-        .contract-doc .product-table td { border-bottom: 1px solid #e5e7ec; font-size: 10.5pt; }
+        .contract-doc .product-table th { background: #f7f8fa; border-bottom: 2px solid #1d2230; text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: #434a5c; }
+        .contract-doc .product-table td { border-bottom: 1px solid #e5e7ec; font-size: 10pt; word-wrap: break-word; }
         .contract-doc .product-table tr.total td { font-weight: 700; border-bottom: 2px solid #1d2230; background: #f7f8fa; }
         .contract-doc .num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
         .contract-doc section { margin-bottom: 18px; }
-        .contract-doc .signatures { margin-top: 38px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
         .contract-doc .sig-block { border-top: 1px solid #1d2230; padding-top: 6px; font-size: 9.5pt; }
         .contract-doc .sig-block strong { font-size: 10.5pt; }
         .contract-doc .ref-pill { display: inline-block; background: #0f1320; color: white; padding: 4px 10px; border-radius: 4px; font-size: 9.5pt; font-weight: 600; letter-spacing: 0.04em; }
-        .contract-doc .observations { white-space: pre-wrap; font-size: 10pt; }
+        .contract-doc .observations { white-space: pre-wrap; font-size: 10pt; word-wrap: break-word; }
+        /* Tablet+: restore the print-style two-column layout */
+        @media (min-width: 640px) {
+          .contract-doc { padding: 28mm 22mm 24mm; min-height: 297mm; }
+          .contract-doc h1 { font-size: 20pt; }
+          .contract-doc .grid-2 { grid-template-columns: 1fr 1fr; gap: 18px; }
+          .contract-doc .signatures { grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 38px; }
+        }
+        /* Print: force A4 dimensions regardless of viewport */
+        @media print {
+          body { background: white !important; }
+          .no-print { display: none !important; }
+          .contract-doc {
+            box-shadow: none !important;
+            margin: 0 !important;
+            width: 210mm !important;
+            max-width: none !important;
+            min-height: 297mm !important;
+            padding: 28mm 22mm 24mm !important;
+          }
+          .contract-doc h1 { font-size: 20pt !important; }
+          .contract-doc .grid-2 {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 18px !important;
+          }
+          .contract-doc .signatures {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 30px !important;
+          }
+        }
       `}</style>
 
       {/* — header — */}
@@ -176,7 +205,8 @@ export function ContractHTML({
       {/* — product — */}
       <section>
         <h2>Product / Producto</h2>
-        <table className="product-table">
+        <div style={{ overflowX: 'auto' }}>
+        <table className="product-table" style={{ minWidth: 360 }}>
           <thead>
             <tr>
               <th>Quantity</th>
@@ -206,6 +236,7 @@ export function ContractHTML({
             </tr>
           </tbody>
         </table>
+        </div>
       </section>
 
       {/* — shipment terms — */}
@@ -281,14 +312,7 @@ export function ContractHTML({
       {/* — payment terms — */}
       <section>
         <h2>Payment Terms / Términos de Pago</h2>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 12,
-            marginTop: 6,
-          }}
-        >
+        <div className="grid-2" style={{ marginTop: 6 }}>
           <div
             style={{
               border: '1px solid #e5e7ec',

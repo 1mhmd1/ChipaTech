@@ -306,7 +306,7 @@ export function NewTradePage() {
                 onDrop={onDrop}
                 onClick={() => fileInput.current?.click()}
                 className={clsx(
-                  'mt-5 cursor-pointer rounded-xl border-2 border-dashed bg-ink-50/50 px-6 py-12 text-center transition',
+                  'mt-5 cursor-pointer rounded-xl border-2 border-dashed bg-ink-50/50 px-4 py-8 sm:px-6 sm:py-12 text-center transition',
                   parsing
                     ? 'border-brand-300 bg-brand-50/40'
                     : 'border-ink-300 hover:border-brand-400 hover:bg-brand-50/30',

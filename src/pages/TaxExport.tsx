@@ -255,7 +255,7 @@ export function TaxExportPage() {
           </div>
         </Card>
 
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Stat label="Frigo cost" value={formatUSD(totals.frigo)} />
           <Stat label="Sale total" value={formatUSD(totals.sale)} />
           <Stat label="Shipping + Insurance + Fees" value={formatUSD(totals.shipping + totals.insurance + totals.fees)} />

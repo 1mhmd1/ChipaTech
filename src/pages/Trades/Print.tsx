@@ -129,11 +129,12 @@ export function PrintContractPage() {
         </div>
       </header>
 
-      {/* Document — sits on a "page" with shadow on screen, becomes plain on print */}
-      <main className="py-6 sm:py-10">
+      {/* Document — sits on a "page" with shadow on screen, becomes plain on print.
+          On mobile we let it fill the viewport with small side gutters; on
+          tablet+ we lock to 210mm A4 so the user sees what the print looks like. */}
+      <main className="px-2 py-4 sm:px-4 sm:py-10">
         <div
-          className="contract-page mx-auto bg-white shadow-elevated"
-          style={{ width: '210mm', maxWidth: '100%' }}
+          className="contract-page mx-auto bg-white shadow-elevated w-full sm:w-[210mm] max-w-full"
         >
           <ContractHTML
             trade={trade}

@@ -801,7 +801,7 @@ function SendContractModal({
                   type="datetime-local"
                   value={scheduleAt}
                   onChange={(e) => setScheduleAt(e.target.value)}
-                  className="mt-2 max-w-[260px]"
+                  className="mt-2 w-full sm:max-w-[260px]"
                 />
               )}
             </div>
@@ -886,7 +886,7 @@ function FinancialBreakdown({ trade }: { trade: import('../../types').Trade }) {
           </p>
         </div>
       </header>
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-ink-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 sm:divide-x divide-ink-100">
         <Stat
           label="Frigo cost"
           value={formatUSD(trade.frigo_total)}
@@ -909,7 +909,7 @@ function FinancialBreakdown({ trade }: { trade: import('../../types').Trade }) {
           className={profitClass}
         />
       </div>
-      <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+      <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
         <Mini label="Shipping" value={formatUSD(trade.shipping_cost)} />
         <Mini label="Insurance" value={formatUSD(trade.insurance_cost)} />
         <Mini label="Bank fees" value={formatUSD(trade.bank_fees)} />
