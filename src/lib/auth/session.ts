@@ -180,7 +180,7 @@ export async function sendPasswordReset(email: string): Promise<void> {
     return;
   }
   const sb = getSupabase();
-  const redirectTo = `${window.location.origin}/login?reset=1`;
+  const redirectTo = `${window.location.origin}/auth/set-password`;
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
   if (error) throw error;
 }

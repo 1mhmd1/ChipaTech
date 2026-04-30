@@ -83,6 +83,13 @@ const ICONS = {
       <path d="M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  key: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+      <circle cx="8" cy="15" r="4" />
+      <path d="M10.85 12.15L19 4" strokeLinecap="round" />
+      <path d="M18 5l3 3M15 8l3 3" strokeLinecap="round" />
+    </svg>
+  ),
   menu: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
       <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round" />
@@ -320,6 +327,18 @@ export function AppShell() {
             </span>
           </div>
         </div>
+        <NavLink
+          to="/account"
+          className={({ isActive }) =>
+            clsx(
+              'btn-ghost w-full justify-start text-[13px]',
+              isActive && 'bg-ink-100/70 text-ink-900',
+            )
+          }
+        >
+          {ICONS.key}
+          Account & password
+        </NavLink>
         <button
           type="button"
           onClick={handleLogout}

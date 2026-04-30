@@ -8,6 +8,8 @@ import { hydrateFromSupabase } from './lib/supabase/repos';
 import { restoreSessionAsync } from './lib/auth/session';
 
 import { LoginPage } from './pages/Login';
+import { SetPasswordPage } from './pages/SetPassword';
+import { AccountPage } from './pages/Account';
 import { DashboardPage } from './pages/Dashboard';
 import { TradesListPage } from './pages/Trades/List';
 import { NewTradePage } from './pages/Trades/New';
@@ -34,6 +36,7 @@ function PrivateRoutes() {
             path="/partner/trades/:id"
             element={<PartnerTradeDetailPage />}
           />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="*" element={<Navigate to="/partner" replace />} />
         </Route>
       </Routes>
@@ -60,6 +63,7 @@ function PrivateRoutes() {
         {isAdmin && <Route path="/entities" element={<EntitiesPage />} />}
         {isAdmin && <Route path="/users" element={<UsersPage />} />}
         {isAdmin && <Route path="/tax-export" element={<TaxExportPage />} />}
+        <Route path="/account" element={<AccountPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
@@ -137,6 +141,7 @@ function App() {
       <BootGate>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/set-password" element={<SetPasswordPage />} />
           <Route path="/*" element={<PrivateRoutes />} />
         </Routes>
       </BootGate>

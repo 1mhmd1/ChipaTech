@@ -42,7 +42,7 @@ export function UsersPage() {
               full_name: draft.full_name,
               role: draft.role,
             },
-            emailRedirectTo: `${window.location.origin}/login`,
+            emailRedirectTo: `${window.location.origin}/auth/set-password`,
           },
         });
         if (error) throw error;
