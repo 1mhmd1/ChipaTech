@@ -4,6 +4,7 @@ import { useAppStore } from '../store/appStore';
 import { Field, Input } from '../components/ui/Field';
 import { impersonate, loginAsync, sendPasswordReset } from '../lib/auth/session';
 import { isSupabaseEnabled } from '../lib/supabase/client';
+import { hydrateFromSupabase, resetHydration } from '../lib/supabase/repos';
 import { Modal } from '../components/ui/Modal';
 
 export function LoginPage() {
@@ -37,6 +38,10 @@ export function LoginPage() {
         return;
       }
       setUser(u);
+      if (isSupabaseEnabled()) {
+        resetHydration();
+        await hydrateFromSupabase();
+      }
       navigate(u.role === 'partner' ? '/partner' : '/', { replace: true });
     } catch (err) {
       setError((err as Error).message ?? 'Sign-in failed.');

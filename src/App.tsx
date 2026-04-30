@@ -77,10 +77,10 @@ function BootGate({ children }: { children: React.ReactNode }) {
     async function boot() {
       try {
         if (isSupabaseEnabled()) {
-          await hydrateFromSupabase();
           const u = await restoreSessionAsync();
           if (cancelled) return;
           setUser(u);
+          await hydrateFromSupabase();
         } else {
           seedIfEmpty();
           await restoreSessionAsync();

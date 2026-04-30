@@ -51,6 +51,11 @@ export function isHydrated() {
   return hydrated;
 }
 
+export function resetHydration() {
+  hydrated = false;
+  hydratePromise = null;
+}
+
 export async function hydrateFromSupabase(): Promise<void> {
   if (hydrated) return;
   if (hydratePromise) return hydratePromise;
