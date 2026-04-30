@@ -129,8 +129,19 @@ export function cacheRemoveWhere<T extends keyof Caches>(
 
 // ----- Background persistence -----
 function reportError(op: string, err: unknown) {
+  // Postgres errors come back as { message, code, details, hint } —
+  // log them flat so the browser console doesn't collapse to "Object".
+  const e = err as
+    | { message?: string; code?: string; details?: string; hint?: string }
+    | undefined;
   // eslint-disable-next-line no-console
-  console.error(`[Supabase ${op} failed]`, err);
+  console.error(
+    `[Supabase ${op} failed]`,
+    e?.message ?? err,
+    e?.code ? `(code ${e.code})` : '',
+    e?.details ?? '',
+    e?.hint ?? '',
+  );
 }
 
 export function persistUpsert<T extends { id: string }>(
