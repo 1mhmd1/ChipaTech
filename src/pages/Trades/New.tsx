@@ -489,7 +489,7 @@ export function NewTradePage() {
                 <div className="text-xs uppercase tracking-wide text-ink-500 font-semibold">
                   Detected from PDF
                 </div>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-ink-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-ink-700">
                   <div>Contract: <span className="font-mono">{parsed.contractRef || '—'}</span></div>
                   <div>Quantity: <span className="font-medium">{parsed.quantity} t</span></div>
                   <div>Product: <span className="text-ink-600">{parsed.productDescription || '—'}</span></div>

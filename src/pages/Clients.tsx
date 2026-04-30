@@ -107,7 +107,7 @@ export function ClientsPage() {
               className="max-w-sm"
             />
             <select
-              className="input max-w-[180px]"
+              className="input w-full sm:w-auto"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
               aria-label="Sort clients"

@@ -80,6 +80,7 @@ export function PartnerDashboardPage() {
               />
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs uppercase tracking-wide text-ink-500 border-b border-ink-100">
                 <tr>
@@ -142,6 +143,7 @@ export function PartnerDashboardPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </Card>
       </PageBody>

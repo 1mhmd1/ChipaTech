@@ -26,21 +26,21 @@ export function Modal({
   if (!open) return null;
 
   const sizes = {
-    sm: 'max-w-md',
-    md: 'max-w-xl',
-    lg: 'max-w-3xl',
-    xl: 'max-w-5xl',
+    sm: 'sm:max-w-md',
+    md: 'sm:max-w-xl',
+    lg: 'sm:max-w-3xl',
+    xl: 'sm:max-w-5xl',
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-900/40 px-4 py-10 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-start justify-center overflow-y-auto bg-ink-900/40 px-0 sm:px-4 py-0 sm:py-10 backdrop-blur-sm">
       <div
         className="absolute inset-0"
         onClick={onClose}
         aria-hidden
       />
       <div
-        className={`relative w-full ${sizes[size]} rounded-2xl bg-white shadow-elevated`}
+        className={`relative w-full ${sizes[size]} rounded-t-2xl sm:rounded-2xl bg-white shadow-elevated`}
       >
         {title && (
           <header className="flex items-center justify-between border-b border-ink-200 px-5 py-4">

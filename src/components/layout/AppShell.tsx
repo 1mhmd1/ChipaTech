@@ -83,6 +83,16 @@ const ICONS = {
       <path d="M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  menu: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+      <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round" />
+    </svg>
+  ),
+  close: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+      <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" />
+    </svg>
+  ),
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -105,9 +115,8 @@ export function AppShell() {
   const { user, logout } = useAppStore();
   const navigate = useNavigate();
   const [overdueCount, setOverdueCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Refresh overdue badge whenever the user lands on a new route — cheap
-  // because evaluateMilestones() reads from the in-memory cache.
   useEffect(() => {
     if (!user) return;
     evaluateMilestones();
@@ -116,6 +125,23 @@ export function AppShell() {
       .filter((t) => t.trade_status === 'overdue').length;
     setOverdueCount(overdue);
   }, [user, navigate]);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [navigate]);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
 
   const navBadges = useMemo(
     (): Record<string, { count: number; tone: 'danger' | 'warning' }> => ({
@@ -136,7 +162,6 @@ export function AppShell() {
     navigate('/login', { replace: true });
   };
 
-  // Group items by their group key, preserving order
   const groupedItems = items.reduce<Record<NavItem['group'], NavItem[]>>(
     (acc, it) => {
       (acc[it.group] ??= []).push(it);
@@ -145,162 +170,217 @@ export function AppShell() {
     {} as Record<NavItem['group'], NavItem[]>,
   );
 
-  return (
-    <div className="flex min-h-screen">
-      <aside className="w-64 shrink-0 bg-white/80 backdrop-blur-sm border-r border-ink-200/70 flex flex-col">
-        {/* Brand header */}
-        <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-ink-900 to-ink-700 text-white font-bold shadow-soft ring-1 ring-ink-900/10">
-            T
-            <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-success-500 ring-2 ring-white" />
+  const sidebarContent = (
+    <>
+      {/* Brand header */}
+      <div className="flex items-center gap-2.5 px-5 py-5">
+        <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-ink-900 to-ink-700 text-white font-bold shadow-soft ring-1 ring-ink-900/10">
+          T
+          <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-success-500 ring-2 ring-white" />
+        </div>
+        <div className="leading-tight">
+          <div className="text-[14px] font-semibold text-ink-900 tracking-tight">
+            TradeMirror OS
           </div>
-          <div className="leading-tight">
-            <div className="text-[14px] font-semibold text-ink-900 tracking-tight">
-              TradeMirror OS
-            </div>
-            <div className="text-[10px] uppercase tracking-[0.12em] text-ink-400">
-              Chipa Farm
-            </div>
+          <div className="text-[10px] uppercase tracking-[0.12em] text-ink-400">
+            Chipa Farm
           </div>
         </div>
+        {/* Close button — only visible on mobile */}
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          className="ml-auto rounded-lg p-1.5 text-ink-400 hover:bg-ink-100 md:hidden"
+          aria-label="Close menu"
+        >
+          {ICONS.close}
+        </button>
+      </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 pb-3">
-          {isPartner ? (
-            <NavLink
-              to="/partner"
-              className={({ isActive }) =>
-                clsx(
-                  'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
-                  isActive
-                    ? 'bg-ink-900 text-white shadow-soft'
-                    : 'text-ink-700 hover:bg-ink-100/70 hover:text-ink-900',
-                )
-              }
-            >
-              {ICONS.partner}
-              Partner Dashboard
-            </NavLink>
-          ) : (
-            <div className="space-y-5">
-              {(['workspace', 'directory', 'settings'] as const).map(
-                (groupKey) => {
-                  const groupItems = groupedItems[groupKey];
-                  if (!groupItems || groupItems.length === 0) return null;
-                  return (
-                    <div key={groupKey}>
-                      <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-400">
-                        {GROUP_LABELS[groupKey]}
-                      </div>
-                      <ul className="space-y-0.5">
-                        {groupItems.map((item) => {
-                          const badge = navBadges[item.to];
-                          return (
-                            <li key={item.to}>
-                              <NavLink
-                                to={item.to}
-                                end={item.to === '/'}
-                                className={({ isActive }) =>
-                                  clsx(
-                                    'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150',
-                                    isActive
-                                      ? 'bg-ink-900 text-white shadow-soft'
-                                      : 'text-ink-600 hover:bg-ink-100/70 hover:text-ink-900',
-                                  )
-                                }
-                              >
-                                {({ isActive }) => (
-                                  <>
+      <nav className="flex-1 overflow-y-auto px-3 pb-3">
+        {isPartner ? (
+          <NavLink
+            to="/partner"
+            className={({ isActive }) =>
+              clsx(
+                'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
+                isActive
+                  ? 'bg-ink-900 text-white shadow-soft'
+                  : 'text-ink-700 hover:bg-ink-100/70 hover:text-ink-900',
+              )
+            }
+          >
+            {ICONS.partner}
+            Partner Dashboard
+          </NavLink>
+        ) : (
+          <div className="space-y-5">
+            {(['workspace', 'directory', 'settings'] as const).map(
+              (groupKey) => {
+                const groupItems = groupedItems[groupKey];
+                if (!groupItems || groupItems.length === 0) return null;
+                return (
+                  <div key={groupKey}>
+                    <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-400">
+                      {GROUP_LABELS[groupKey]}
+                    </div>
+                    <ul className="space-y-0.5">
+                      {groupItems.map((item) => {
+                        const badge = navBadges[item.to];
+                        return (
+                          <li key={item.to}>
+                            <NavLink
+                              to={item.to}
+                              end={item.to === '/'}
+                              className={({ isActive }) =>
+                                clsx(
+                                  'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150',
+                                  isActive
+                                    ? 'bg-ink-900 text-white shadow-soft'
+                                    : 'text-ink-600 hover:bg-ink-100/70 hover:text-ink-900',
+                                )
+                              }
+                            >
+                              {({ isActive }) => (
+                                <>
+                                  <span
+                                    className={clsx(
+                                      'transition-colors',
+                                      isActive
+                                        ? 'text-white'
+                                        : 'text-ink-400 group-hover:text-ink-700',
+                                    )}
+                                  >
+                                    {item.icon}
+                                  </span>
+                                  <span className="flex-1 truncate">
+                                    {item.label}
+                                  </span>
+                                  {badge && badge.count > 0 && (
                                     <span
                                       className={clsx(
-                                        'transition-colors',
-                                        isActive
-                                          ? 'text-white'
-                                          : 'text-ink-400 group-hover:text-ink-700',
+                                        'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold ring-1 ring-white/20',
+                                        badge.tone === 'danger'
+                                          ? 'bg-danger-500 text-white shadow-[0_0_0_3px_rgba(239,68,68,0.18)]'
+                                          : 'bg-warning-500 text-white',
                                       )}
+                                      title={`${badge.count} overdue`}
                                     >
-                                      {item.icon}
+                                      {badge.count}
                                     </span>
-                                    <span className="flex-1 truncate">
-                                      {item.label}
-                                    </span>
-                                    {badge && badge.count > 0 && (
-                                      <span
-                                        className={clsx(
-                                          'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold ring-1 ring-white/20',
-                                          badge.tone === 'danger'
-                                            ? 'bg-danger-500 text-white shadow-[0_0_0_3px_rgba(239,68,68,0.18)]'
-                                            : 'bg-warning-500 text-white',
-                                        )}
-                                        title={`${badge.count} overdue`}
-                                      >
-                                        {badge.count}
-                                      </span>
-                                    )}
-                                  </>
-                                )}
-                              </NavLink>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  );
-                },
-              )}
-            </div>
-          )}
-        </nav>
+                                  )}
+                                </>
+                              )}
+                            </NavLink>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              },
+            )}
+          </div>
+        )}
+      </nav>
 
-        {/* Account footer */}
-        <div className="border-t border-ink-100 p-3">
-          <div className="group rounded-xl border border-ink-100 bg-gradient-to-br from-white to-ink-50/40 p-3 mb-2 shadow-soft">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-900 text-white text-xs font-bold">
-                {user.full_name
-                  .split(' ')
-                  .map((p) => p[0])
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[13px] font-semibold text-ink-900 truncate">
-                  {user.full_name}
-                </div>
-                <div className="text-[11px] text-ink-500 truncate">
-                  {user.email}
-                </div>
-              </div>
+      {/* Account footer */}
+      <div className="border-t border-ink-100 p-3">
+        <div className="group rounded-xl border border-ink-100 bg-gradient-to-br from-white to-ink-50/40 p-3 mb-2 shadow-soft">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-900 text-white text-xs font-bold">
+              {user.full_name
+                .split(' ')
+                .map((p) => p[0])
+                .slice(0, 2)
+                .join('')
+                .toUpperCase()}
             </div>
-            <div className="mt-2.5 flex items-center gap-1.5">
-              <span
-                className={clsx(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
-                  user.role === 'super_admin'
-                    ? 'bg-ink-900 text-white'
-                    : user.role === 'partner'
-                      ? 'bg-warning-100 text-warning-700'
-                      : 'bg-brand-50 text-brand-700',
-                )}
-              >
-                {user.role.replace('_', ' ')}
-              </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-semibold text-ink-900 truncate">
+                {user.full_name}
+              </div>
+              <div className="text-[11px] text-ink-500 truncate">
+                {user.email}
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="btn-ghost w-full justify-start text-[13px]"
-          >
-            {ICONS.logout}
-            Sign out
-          </button>
+          <div className="mt-2.5 flex items-center gap-1.5">
+            <span
+              className={clsx(
+                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                user.role === 'super_admin'
+                  ? 'bg-ink-900 text-white'
+                  : user.role === 'partner'
+                    ? 'bg-warning-100 text-warning-700'
+                    : 'bg-brand-50 text-brand-700',
+              )}
+            >
+              {user.role.replace('_', ' ')}
+            </span>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="btn-ghost w-full justify-start text-[13px]"
+        >
+          {ICONS.logout}
+          Sign out
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="flex min-h-screen">
+      {/* ── Desktop sidebar ── always visible on md+ ── */}
+      <aside className="hidden md:flex w-64 shrink-0 flex-col bg-white/80 backdrop-blur-sm border-r border-ink-200/70">
+        {sidebarContent}
       </aside>
 
-      <main className="flex-1 min-w-0">
-        <Outlet />
-      </main>
+      {/* ── Mobile sidebar overlay ── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 md:hidden"
+          aria-hidden
+          onClick={() => setSidebarOpen(false)}
+          style={{ background: 'rgba(15,23,42,0.45)' }}
+        />
+      )}
+      <aside
+        className={clsx(
+          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white shadow-elevated transition-transform duration-300 md:hidden',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* ── Main content area ── */}
+      <div className="flex flex-1 flex-col min-w-0">
+        {/* Mobile top bar */}
+        <div className="flex items-center gap-3 border-b border-ink-200/60 bg-white/80 backdrop-blur-sm px-4 py-3 md:hidden sticky top-0 z-30">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="rounded-lg p-1.5 text-ink-600 hover:bg-ink-100"
+            aria-label="Open menu"
+          >
+            {ICONS.menu}
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-ink-900 text-white text-xs font-bold">
+              T
+            </div>
+            <span className="text-sm font-semibold text-ink-900">TradeMirror OS</span>
+          </div>
+        </div>
+
+        <main className="flex-1 min-w-0">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

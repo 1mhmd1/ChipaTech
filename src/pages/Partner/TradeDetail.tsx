@@ -136,7 +136,7 @@ export function PartnerTradeDetailPage() {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3 p-5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-5 text-xs">
                 <div className="rounded-lg bg-ink-50 p-3">
                   <div className="text-[10px] uppercase tracking-wide text-ink-500 font-semibold">
                     Shipping

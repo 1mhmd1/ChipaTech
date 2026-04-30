@@ -115,7 +115,7 @@ export function LoginPage() {
             lifecycle — from advance to balance — in one place.
           </p>
 
-          <div className="mt-10 grid grid-cols-3 gap-3 max-w-md">
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md">
             {[
               { v: 'Pixel-perfect', l: 'PDF mirroring' },
               { v: 'Real-time', l: 'Trade ledger' },

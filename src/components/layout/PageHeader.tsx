@@ -12,14 +12,14 @@ export function PageHeader({
   breadcrumb?: ReactNode;
 }) {
   return (
-    <header className="glass border-b border-ink-200/60 sticky top-0 z-20">
-      <div className="px-8 py-5">
+    <header className="glass border-b border-ink-200/60 sticky top-0 z-20 md:top-0">
+      <div className="px-4 py-4 sm:px-8 sm:py-5">
         {breadcrumb && (
           <div className="text-[11px] uppercase tracking-[0.08em] text-ink-400 mb-1.5 font-medium">
             {breadcrumb}
           </div>
         )}
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
             <h1 className="display-1 leading-tight">{title}</h1>
             {description && (
@@ -43,6 +43,6 @@ export function PageBody({
   className?: string;
 }) {
   return (
-    <div className={`px-8 py-6 animate-in ${className ?? ''}`}>{children}</div>
+    <div className={`px-4 py-4 sm:px-6 sm:py-6 animate-in ${className ?? ''}`}>{children}</div>
   );
 }
