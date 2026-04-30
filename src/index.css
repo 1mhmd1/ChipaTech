@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  /* Subtle background blob for the app shell — visible behind cards */
+  --app-bg:
+    radial-gradient(1200px 600px at 0% -10%, rgba(46, 144, 255, 0.06), transparent 60%),
+    radial-gradient(900px 500px at 100% 110%, rgba(170, 59, 255, 0.05), transparent 60%),
+    #f7f8fa;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--app-bg);
+  background-attachment: fixed;
+  color: #1d2230;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+
+@layer components {
+  /* ------------ Buttons ------------ */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium
+           transition-all duration-150 ease-out
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-ink-900 text-white shadow-soft
+           hover:bg-ink-800 hover:shadow-elevated active:bg-black active:translate-y-px
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/20;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-ink-800 border border-ink-200 shadow-soft
+           hover:border-ink-300 hover:bg-ink-50 hover:shadow-elevated active:translate-y-px
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-300/40;
+  }
+  .btn-ghost {
+    @apply btn text-ink-600 hover:bg-ink-100/80 hover:text-ink-900;
+  }
+  .btn-danger {
+    @apply btn bg-danger-600 text-white shadow-soft hover:bg-danger-700 hover:shadow-elevated active:translate-y-px;
+  }
+  .btn-brand {
+    @apply btn bg-brand-600 text-white shadow-soft hover:bg-brand-700 hover:shadow-elevated active:translate-y-px;
+  }
+
+  /* ------------ Inputs ------------ */
+  .input {
+    @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900
+           placeholder-ink-400 outline-none shadow-[0_1px_0_0_rgba(15,19,32,0.02)]
+           transition-all duration-150
+           hover:border-ink-300
+           focus:border-brand-500 focus:ring-4 focus:ring-brand-100/60
+           disabled:bg-ink-50 disabled:text-ink-500 disabled:cursor-not-allowed;
+  }
+  .label {
+    @apply block text-[11px] font-semibold uppercase tracking-[0.07em] text-ink-500 mb-1.5;
+  }
+
+  /* ------------ Cards ------------ */
+  .card {
+    @apply rounded-xl border border-ink-200/80 bg-white shadow-soft
+           transition-shadow duration-200 hover:shadow-elevated;
+  }
+  .card-pad { @apply p-5; }
+  .card-flat {
+    @apply rounded-xl border border-ink-200/80 bg-white shadow-none;
+  }
+  .card-gradient-success {
+    background:
+      linear-gradient(135deg, rgba(209, 250, 229, 0.6) 0%, rgba(255, 255, 255, 1) 60%);
+    @apply border border-success-100;
+  }
+  .card-gradient-danger {
+    background:
+      linear-gradient(135deg, rgba(254, 226, 226, 0.7) 0%, rgba(255, 255, 255, 1) 60%);
+    @apply border border-danger-100;
+  }
+  .card-gradient-brand {
+    background:
+      linear-gradient(135deg, rgba(217, 236, 255, 0.6) 0%, rgba(255, 255, 255, 1) 60%);
+    @apply border border-brand-100;
+  }
+
+  /* ------------ Badges ------------ */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold
+           tracking-[0.01em];
+  }
+
+  /* ------------ Tables ------------ */
+  .table-row-hover {
+    @apply transition-colors duration-150 hover:bg-ink-50/70;
+  }
+
+  /* ------------ Misc ------------ */
+  .field-locked {
+    @apply bg-ink-50 border-dashed text-ink-600 cursor-not-allowed;
+  }
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
+  }
+  .ring-offset-app { --tw-ring-offset-color: #f7f8fa; }
+
+  /* Display heading style — used on page titles */
+  .display-1 {
+    @apply text-2xl font-semibold tracking-tight text-ink-900;
+    letter-spacing: -0.02em;
+  }
+  .display-num {
+    @apply tabular-nums font-semibold tracking-tight text-ink-900;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+  .serif {
+    font-family: 'Instrument Serif', 'Source Serif Pro', Georgia, serif;
+    letter-spacing: -0.005em;
+  }
+}
+
+/* ------------ PDF preview ------------ */
+.pdf-preview {
+  width: 100%;
+  height: 80vh;
+  border: 1px solid #dde1ea;
+  border-radius: 12px;
+  background: #f7f8fa;
+}
+
+/* ------------ Scrollbar ------------ */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #dde1ea; border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: #bcc3d2; background-clip: padding-box; }
+
+/* ------------ Animations ------------ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: fadeIn 200ms ease-out;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #eef0f4 0%, #f7f8fa 50%, #eef0f4 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes ping-slow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0; }
+}
+
+/* Selection */
+::selection {
+  background: #d9ecff;
+  color: #143f85;
+}
+
+/* Subtle keyboard focus ring for everything interactive */
+:focus-visible {
+  outline: none;
+}
