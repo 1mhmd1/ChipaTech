@@ -23,10 +23,10 @@ import { loadDocumentBlob, saveDocumentBlob } from '../../lib/storage/files';
 import { computeFinancials } from '../../lib/finance';
 import { formatMoney, formatTons, formatUSD } from '../../lib/format';
 import { useAppStore } from '../../store/appStore';
-import { Modal } from '../../components/ui/Modal';
 import { buildWarnings, WarningsList } from '../../components/trade/Warnings';
 import { sendContract } from '../../lib/email';
 import { Badge } from '../../components/ui/Badge';
+import { Spinner } from '../../components/ui/Spinner';
 
 export function ContractEditorPage() {
   const { id } = useParams();
@@ -175,10 +175,8 @@ export function ContractEditorPage() {
     if (autoPrepayment) setPrepaymentText(defaultPrepayment);
   }, [defaultPrepayment, autoPrepayment]);
 
-  // ----- preview / generate -----
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // ----- generate -----
   const [generating, setGenerating] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   // Auto-email on Generate (PRD desire layer): when checked, after the
   // contract is generated and saved we immediately invoke the
   // send-contract Edge Function with sensible defaults.
@@ -298,31 +296,6 @@ export function ContractEditorPage() {
     const copy = new ArrayBuffer(bytes.byteLength);
     new Uint8Array(copy).set(bytes);
     return copy;
-  };
-
-  const onPreview = async (debug = false) => {
-    if (sourceMissing) return; // banner already prompts the user
-    setGenerating(true);
-    try {
-      const src = await fetchSourcePdf();
-      if (!src) {
-        // Should be unreachable since we gate on sourceMissing, but
-        // surface a helpful message instead of a raw alert anyway.
-        setSourceVersion((v) => v + 1);
-        return;
-      }
-      const out = await generateMirroredContract(src, buildPayload(), {
-        debug,
-      });
-      const url = bytesToBlobUrl(out);
-      setPreviewUrl(url);
-      setShowPreview(true);
-    } catch (e) {
-      console.error(e);
-      alert((e as Error).message);
-    } finally {
-      setGenerating(false);
-    }
   };
 
   const persistTrade = () => {
@@ -479,22 +452,24 @@ export function ContractEditorPage() {
         }
         actions={
           <>
+            {/* Save current edits, then jump to the HTML preview/print page.
+                This is the primary "fresh PDF" path the manager asked for —
+                no supplier-PDF dependency, no overlay. */}
             <button
               type="button"
-              onClick={() => onPreview(true)}
-              disabled={generating || sourceMissing}
-              className="btn-ghost"
-              title="Render with red outlines around each replaced field — useful for coordinate calibration"
-            >
-              Debug
-            </button>
-            <button
-              type="button"
-              onClick={() => onPreview(false)}
-              disabled={generating || sourceMissing}
+              onClick={() => {
+                persistTrade();
+                navigate(`/trades/${trade.id}/print`);
+              }}
               className="btn-secondary"
+              title="Save edits and open the printable contract — use the browser's Save as PDF from there."
             >
-              {generating ? 'Working…' : 'Preview PDF'}
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M6 9V2h12v7" strokeLinejoin="round" />
+                <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" strokeLinejoin="round" />
+                <rect x="6" y="14" width="12" height="8" rx="1" />
+              </svg>
+              Preview & Print
             </button>
             <label
               className="flex items-center gap-2 px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm text-ink-700 cursor-pointer hover:border-ink-300 select-none"
@@ -516,12 +491,22 @@ export function ContractEditorPage() {
               onClick={onGenerate}
               disabled={generating || sourceMissing}
               className="btn-primary"
+              title="Mirror the supplier PDF (legacy path). Use Preview & Print for a fresh, generated contract instead."
             >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 3v12m0 0l-4-4m4 4l4-4" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M5 21h14" strokeLinecap="round" />
-              </svg>
-              {autoEmail ? 'Generate & send' : 'Generate & download'}
+              {generating ? (
+                <>
+                  <Spinner />
+                  {autoEmail ? 'Generating & sending…' : 'Generating…'}
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 3v12m0 0l-4-4m4 4l4-4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M5 21h14" strokeLinecap="round" />
+                  </svg>
+                  {autoEmail ? 'Generate & send' : 'Generate & download'}
+                </>
+              )}
             </button>
           </>
         }
@@ -1140,27 +1125,6 @@ export function ContractEditorPage() {
           </aside>
         </div>
 
-        <Modal
-          open={showPreview}
-          onClose={() => setShowPreview(false)}
-          title="Mirrored contract preview"
-          size="xl"
-        >
-          {previewUrl && (
-            <iframe src={previewUrl} className="pdf-preview" title="Preview" />
-          )}
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              className="btn-secondary"
-              onClick={() => setShowPreview(false)}
-            >
-              Close
-            </button>
-            <button className="btn-primary" onClick={onGenerate}>
-              Looks good — generate & download
-            </button>
-          </div>
-        </Modal>
       </PageBody>
     </>
   );

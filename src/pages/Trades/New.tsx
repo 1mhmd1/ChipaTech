@@ -24,6 +24,7 @@ import type { Client, ParsedContract, Trade } from '../../types';
 import clsx from 'clsx';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Field';
+import { Spinner } from '../../components/ui/Spinner';
 
 type Step = 'upload' | 'select' | 'review';
 
@@ -39,6 +40,7 @@ export function NewTradePage() {
   const [parsing, setParsing] = useState(false);
   const [parseError, setParseError] = useState<string>();
   const [parsed, setParsed] = useState<ParsedContract | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const entities = useMemo(() => entitiesDB.list(), []);
   const banks = useMemo(() => banksDB.list(), []);
@@ -155,9 +157,11 @@ export function NewTradePage() {
   };
 
   const createTrade = async () => {
+    if (creating) return;
     if (!parsed || !fileBytes || !user) return;
     if (!entityId || !bankProfileId || !clientId || !contactId) return;
-
+    setCreating(true);
+    try {
     const reference = tradesDB.nextReference();
     const tradeId = uid('trd');
     const now = nowIso();
@@ -262,6 +266,9 @@ export function NewTradePage() {
     );
 
     navigate(`/trades/${tradeId}/editor`);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -512,13 +519,25 @@ export function NewTradePage() {
                   ← Replace PDF
                 </button>
                 <button
+                  type="button"
                   className="btn-primary"
                   onClick={createTrade}
                   disabled={
-                    !entityId || !bankProfileId || !clientId || !contactId
+                    creating ||
+                    !entityId ||
+                    !bankProfileId ||
+                    !clientId ||
+                    !contactId
                   }
                 >
-                  Create trade & open editor →
+                  {creating ? (
+                    <>
+                      <Spinner />
+                      Creating trade…
+                    </>
+                  ) : (
+                    <>Create trade & open editor →</>
+                  )}
                 </button>
               </div>
             </Card>

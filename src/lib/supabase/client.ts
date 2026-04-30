@@ -38,3 +38,28 @@ export function getSupabase(): SupabaseClient {
 }
 
 export const SUPABASE_BUCKET = 'trade-documents';
+
+/**
+ * Create a brand-new, throwaway Supabase client with its own session
+ * storage. Use this when you need to perform an auth action (e.g. a
+ * super-admin creating another user via signUp) without disrupting the
+ * current admin's session — Supabase's default client would replace
+ * the JWT in localStorage, signing the admin out.
+ *
+ * The returned client has `persistSession: false`, so anything it does
+ * stays in memory and is GC'd when the caller drops the reference.
+ */
+export function createEphemeralSupabase(): SupabaseClient {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error(
+      'Supabase env vars are missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+    );
+  }
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}

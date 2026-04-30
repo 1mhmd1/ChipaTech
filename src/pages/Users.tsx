@@ -8,7 +8,12 @@ import { nowIso, uid, usersDB } from '../lib/storage/db';
 import { useAppStore } from '../store/appStore';
 import { formatDateTime } from '../lib/format';
 import type { User, UserRole } from '../types';
-import { getSupabase, isSupabaseEnabled } from '../lib/supabase/client';
+import {
+  createEphemeralSupabase,
+  getSupabase,
+  isSupabaseEnabled,
+} from '../lib/supabase/client';
+import { Spinner } from '../components/ui/Spinner';
 
 export function UsersPage() {
   const me = useAppStore((s) => s.user);
@@ -20,7 +25,12 @@ export function UsersPage() {
     email: '',
     full_name: '',
     role: 'internal' as UserRole,
+    password: '',
   });
+  // 'invite' = magic-link email; 'create' = admin sets password directly.
+  // The latter uses an ephemeral Supabase client so the current admin's
+  // session isn't replaced when the new user is signed up.
+  const [createMode, setCreateMode] = useState<'invite' | 'create'>('invite');
 
   const [inviteError, setInviteError] = useState<string>();
   const [inviting2, setInviting2] = useState(false);
@@ -30,22 +40,43 @@ export function UsersPage() {
     setInviting2(true);
     try {
       if (isSupabaseEnabled()) {
-        // Real Supabase invitation: send a magic link. The trigger
-        // in 0001_init.sql auto-creates public.users from the
-        // raw_user_meta_data we attach here.
-        const sb = getSupabase();
-        const { error } = await sb.auth.signInWithOtp({
-          email: draft.email,
-          options: {
-            shouldCreateUser: true,
-            data: {
-              full_name: draft.full_name,
-              role: draft.role,
+        if (createMode === 'invite') {
+          // Real Supabase invitation: send a magic link. The trigger
+          // in 0001_init.sql auto-creates public.users from the
+          // raw_user_meta_data we attach here.
+          const sb = getSupabase();
+          const { error } = await sb.auth.signInWithOtp({
+            email: draft.email,
+            options: {
+              shouldCreateUser: true,
+              data: {
+                full_name: draft.full_name,
+                role: draft.role,
+              },
+              emailRedirectTo: `${window.location.origin}/auth/set-password`,
             },
-            emailRedirectTo: `${window.location.origin}/auth/set-password`,
-          },
-        });
-        if (error) throw error;
+          });
+          if (error) throw error;
+        } else {
+          // Direct creation — admin sets the password.
+          // Use an ephemeral client so this signUp call doesn't replace
+          // the admin's own session in localStorage.
+          if (draft.password.length < 8) {
+            throw new Error('Password must be at least 8 characters.');
+          }
+          const sb = createEphemeralSupabase();
+          const { error } = await sb.auth.signUp({
+            email: draft.email,
+            password: draft.password,
+            options: {
+              data: {
+                full_name: draft.full_name,
+                role: draft.role,
+              },
+            },
+          });
+          if (error) throw error;
+        }
       } else {
         // Demo mode: insert directly into the in-memory users table
         usersDB.insert({
@@ -59,12 +90,24 @@ export function UsersPage() {
         });
       }
       setInviting(false);
-      setDraft({ email: '', full_name: '', role: 'internal' });
+      setDraft({
+        email: '',
+        full_name: '',
+        role: 'internal',
+        password: '',
+      });
+      setCreateMode('invite');
       setVersion((v) => v + 1);
       alert(
-        isSupabaseEnabled()
-          ? `Magic-link invitation sent to ${draft.email}. They'll be added to the team list once they accept.`
-          : `Demo invitation created for ${draft.email}.`,
+        !isSupabaseEnabled()
+          ? `Demo invitation created for ${draft.email}.`
+          : createMode === 'invite'
+            ? `Magic-link invitation sent to ${draft.email}. They'll be added to the team list once they accept.`
+            : `Account created for ${draft.email}. Share the password with them and they can sign in immediately.${
+                isSupabaseEnabled()
+                  ? ' (Depending on your Supabase email-confirmation setting they may also receive a confirmation link.)'
+                  : ''
+              }`,
       );
     } catch (err) {
       setInviteError((err as Error).message ?? 'Could not send invitation.');
@@ -181,9 +224,57 @@ export function UsersPage() {
         <Modal
           open={inviting}
           onClose={() => setInviting(false)}
-          title="Invite user"
+          title="Add user"
         >
           <div className="space-y-4">
+            {/* Mode toggle — only meaningful in Supabase mode */}
+            {isSupabaseEnabled() && (
+              <div
+                role="radiogroup"
+                aria-label="Account creation method"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={createMode === 'invite' ? 'true' : 'false'}
+                  onClick={() => setCreateMode('invite')}
+                  className={
+                    'rounded-lg border p-3 text-left transition-all ' +
+                    (createMode === 'invite'
+                      ? 'border-ink-900 bg-ink-50 shadow-soft'
+                      : 'border-ink-200 hover:border-ink-300')
+                  }
+                >
+                  <div className="text-sm font-semibold text-ink-900">
+                    Send invite link
+                  </div>
+                  <div className="text-[11px] text-ink-500 mt-0.5">
+                    User sets their own password via email.
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={createMode === 'create' ? 'true' : 'false'}
+                  onClick={() => setCreateMode('create')}
+                  className={
+                    'rounded-lg border p-3 text-left transition-all ' +
+                    (createMode === 'create'
+                      ? 'border-ink-900 bg-ink-50 shadow-soft'
+                      : 'border-ink-200 hover:border-ink-300')
+                  }
+                >
+                  <div className="text-sm font-semibold text-ink-900">
+                    Create with password
+                  </div>
+                  <div className="text-[11px] text-ink-500 mt-0.5">
+                    You set the password and share it with them.
+                  </div>
+                </button>
+              </div>
+            )}
+
             <Field label="Full name" required>
               <Input
                 value={draft.full_name}
@@ -216,10 +307,25 @@ export function UsersPage() {
                 <option value="super_admin">Super Admin</option>
               </Select>
             </Field>
+            {isSupabaseEnabled() && createMode === 'create' && (
+              <Field label="Initial password" required>
+                <Input
+                  type="text"
+                  value={draft.password}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, password: e.target.value }))
+                  }
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                />
+              </Field>
+            )}
             <p className="text-xs text-ink-500">
-              {isSupabaseEnabled()
-                ? 'A magic-link email is sent via Supabase Auth. The user signs in with the link, sets a password from the Supabase prompt, and lands in their role-appropriate dashboard.'
-                : 'Demo mode: this creates a local user record only. Configure VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY for real email invitations.'}
+              {!isSupabaseEnabled()
+                ? 'Demo mode: this creates a local user record only. Configure VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY for real email invitations.'
+                : createMode === 'invite'
+                  ? 'A magic-link email is sent via Supabase Auth. The user clicks the link, picks a password, and lands in their role-appropriate dashboard.'
+                  : 'The account is created immediately with the password you choose. The user can sign in straight away — share the password with them through a secure channel. Note: depending on your Supabase email-confirmation setting they may also receive a confirmation link.'}
             </p>
             {inviteError && (
               <div className="rounded-lg bg-danger-50 border border-danger-100 px-3 py-2 text-sm text-danger-700">
@@ -239,9 +345,25 @@ export function UsersPage() {
               type="button"
               onClick={invite}
               className="btn-primary"
-              disabled={!draft.email || !draft.full_name || inviting2}
+              disabled={
+                !draft.email ||
+                !draft.full_name ||
+                inviting2 ||
+                (isSupabaseEnabled() &&
+                  createMode === 'create' &&
+                  draft.password.length < 8)
+              }
             >
-              {inviting2 ? 'Sending…' : 'Send invite'}
+              {inviting2 ? (
+                <>
+                  <Spinner />
+                  {createMode === 'create' ? 'Creating…' : 'Sending…'}
+                </>
+              ) : createMode === 'create' && isSupabaseEnabled() ? (
+                'Create account'
+              ) : (
+                'Send invite'
+              )}
             </button>
           </div>
         </Modal>

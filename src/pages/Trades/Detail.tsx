@@ -277,6 +277,18 @@ export function TradeDetailPage() {
                 </svg>
                 Audit ZIP
               </button>
+              <Link
+                to={`/trades/${trade.id}/print`}
+                className="btn-secondary"
+                title="Open the printable contract — use the browser's Save as PDF from there"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 9V2h12v7" strokeLinejoin="round" />
+                  <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" strokeLinejoin="round" />
+                  <rect x="6" y="14" width="12" height="8" rx="1" />
+                </svg>
+                Preview & Print
+              </Link>
               {hasGenerated && (
                 <button
                   type="button"

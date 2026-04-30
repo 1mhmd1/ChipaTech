@@ -25,6 +25,17 @@ html, body, #root {
   letter-spacing: -0.005em;
 }
 
+/* Print-only: the toolbar in /trades/:id/print uses .no-print so the
+   browser's "Save as PDF" output contains just the contract page,
+   no app chrome. Also force a white page background. */
+@media print {
+  html, body, #root {
+    background: #ffffff !important;
+  }
+  .no-print { display: none !important; }
+  .contract-page { box-shadow: none !important; margin: 0 !important; }
+}
+
 @layer components {
   /* ------------ Buttons ------------ */
   .btn {

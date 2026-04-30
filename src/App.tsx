@@ -15,6 +15,7 @@ import { TradesListPage } from './pages/Trades/List';
 import { NewTradePage } from './pages/Trades/New';
 import { TradeDetailPage } from './pages/Trades/Detail';
 import { ContractEditorPage } from './pages/Trades/Editor';
+import { PrintContractPage } from './pages/Trades/Print';
 import { ClientsPage } from './pages/Clients';
 import { ContactsPage } from './pages/Contacts';
 import { EntitiesPage } from './pages/Entities';
@@ -47,6 +48,11 @@ function PrivateRoutes() {
 
   return (
     <Routes>
+      {/* Print view — no AppShell so the page reflects what the
+          PDF will look like. Still inside PrivateRoutes (logged-in only). */}
+      {isAdmin && (
+        <Route path="/trades/:id/print" element={<PrintContractPage />} />
+      )}
       <Route element={<AppShell />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/trades" element={<TradesListPage />} />
