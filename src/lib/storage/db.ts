@@ -118,6 +118,12 @@ function deleteRow(table: TableName, id: string): boolean {
 }
 
 export function uid(prefix = ''): string {
+  // Supabase columns are typed `uuid`, so in Supabase mode we MUST
+  // emit a real UUID — the prefix-style ID was a localStorage-only
+  // convenience and Postgres rejects it with code 22P02.
+  if (isSupabaseEnabled() && typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
   const random = Math.random().toString(36).slice(2, 10);
   const ts = Date.now().toString(36);
   return `${prefix}${prefix ? '_' : ''}${ts}${random}`;
