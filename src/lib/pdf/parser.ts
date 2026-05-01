@@ -6,50 +6,44 @@
 // Contract Editor and the mirror generator.
 // ============================================================
 
-import type { ParsedContract } from '../../types';
+import type { ParsedContract } from "../../types";
 
-let pdfjsWorkerReady = true;
-
-function isLikelyMobile(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-}
+let pdfjsWorkerReady = false;
 
 // Lazy-load pdfjs to keep the initial bundle slim
 async function loadPdfjs() {
-  const useLegacy = isLikelyMobile();
-  const pdfjsLib = useLegacy
-    ? await import('pdfjs-dist/legacy/build/pdf.mjs')
-    : await import('pdfjs-dist');
-  // Use the legacy worker for compatibility
+  const pdfjsLib = await import("pdfjs-dist");
+  // Try to load the web worker for performance. If it fails (e.g. strict
+  // CSP, old WebView, iOS Safari limitations) we clear workerSrc so
+  // pdfjs falls back to main-thread parsing automatically.
   try {
-    const worker = useLegacy
-      ? await import('pdfjs-dist/legacy/build/pdf.worker.mjs?url')
-      : await import('pdfjs-dist/build/pdf.worker.mjs?url');
+    const worker = await import("pdfjs-dist/build/pdf.worker.mjs?url");
     pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
     pdfjsWorkerReady = true;
   } catch {
-    // Mobile browsers or CSP can block module workers.
-    // We'll fall back to main-thread parsing instead.
+    // Browsers that block module workers (e.g. iOS WKWebView with strict CSP)
+    // will parse on the main thread — slower but fully functional.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "";
     pdfjsWorkerReady = false;
   }
   return pdfjsLib;
 }
 
 async function getPdfDocument(
-  pdfjs: typeof import('pdfjs-dist'),
+  pdfjs: typeof import("pdfjs-dist"),
   data: ArrayBuffer,
 ) {
   try {
     const params = {
       data,
-      disableWorker: isLikelyMobile() ? true : !pdfjsWorkerReady,
+      disableWorker: !pdfjsWorkerReady,
       isEvalSupported: false,
       disableFontFace: true,
       useSystemFonts: true,
     } as unknown as Record<string, unknown>;
     return await pdfjs.getDocument(params).promise;
   } catch {
+    // Last-resort retry: fully disable the worker (handles iOS WKWebView)
     const params = {
       data,
       disableWorker: true,
@@ -72,7 +66,7 @@ async function extractLines(file: ArrayBuffer): Promise<string[]> {
   const doc = await getPdfDocument(pdfjs, file);
   const lines: string[] = [];
   const rawItems: string[] = [];
-  const maxPages = isLikelyMobile() ? Math.min(1, doc.numPages) : doc.numPages;
+  const maxPages = doc.numPages; // Always process all pages on all devices
   for (let p = 1; p <= maxPages; p++) {
     const page = await doc.getPage(p);
     const tcParams = { normalizeWhitespace: true } as unknown as Record<
@@ -94,7 +88,7 @@ async function extractLines(file: ArrayBuffer): Promise<string[]> {
       str: string;
       transform?: number[];
     }>) {
-      const text = item.str ?? '';
+      const text = item.str ?? "";
       if (text.trim()) rawItems.push(text.trim());
       const x = item.transform ? item.transform[4] : 0;
       const y = item.transform ? Math.round(item.transform[5]) : 0;
@@ -106,14 +100,14 @@ async function extractLines(file: ArrayBuffer): Promise<string[]> {
       const text = line.segments
         .sort((a, b) => a.x - b.x)
         .map((s) => s.text)
-        .join(' ')
-        .replace(/\s+/g, ' ')
+        .join(" ")
+        .replace(/\s+/g, " ")
         .trim();
       if (text) lines.push(text);
     }
   }
   if (lines.length === 0 && rawItems.length > 0) {
-    lines.push(rawItems.join(' '));
+    lines.push(rawItems.join(" "));
   }
   return lines;
 }
@@ -122,18 +116,18 @@ async function extractLines(file: ArrayBuffer): Promise<string[]> {
 function parseNumber(raw?: string): number {
   if (!raw) return 0;
   const cleaned = raw
-    .replace(/[A-Za-z$\s]/g, '')
-    .replace(/U\$/g, '')
+    .replace(/[A-Za-z$\s]/g, "")
+    .replace(/U\$/g, "")
     .trim();
   if (!cleaned) return 0;
   // If both . and , present, assume European: . = thousand, , = decimal
-  if (cleaned.includes('.') && cleaned.includes(',')) {
-    return parseFloat(cleaned.replace(/\./g, '').replace(',', '.')) || 0;
+  if (cleaned.includes(".") && cleaned.includes(",")) {
+    return parseFloat(cleaned.replace(/\./g, "").replace(",", ".")) || 0;
   }
-  if (cleaned.includes(',')) {
+  if (cleaned.includes(",")) {
     // Last , is decimal separator
-    const lastComma = cleaned.lastIndexOf(',');
-    const intPart = cleaned.slice(0, lastComma).replace(/[.,]/g, '');
+    const lastComma = cleaned.lastIndexOf(",");
+    const intPart = cleaned.slice(0, lastComma).replace(/[.,]/g, "");
     const decPart = cleaned.slice(lastComma + 1);
     return parseFloat(`${intPart}.${decPart}`) || 0;
   }
@@ -156,20 +150,22 @@ export async function parseSupplierContract(
   file: ArrayBuffer,
 ): Promise<ParsedContract> {
   const lines = await extractLines(file);
-  const text = lines.join('\n');
+  const text = lines.join("\n");
+  const flatText = text.replace(/\s+/g, " ").trim();
 
   // Contract reference
   const contractRefMatch = text.match(/Contract\s*No\.?\s*:?\s*([0-9/-]+)/i);
-  const contractRef = contractRefMatch ? contractRefMatch[1] : '';
+  const contractRefFlat = flatText.match(/Contract\s*No\.?\s*:?\s*([0-9/-]+)/i);
+  const contractRef = contractRefMatch?.[1] ?? contractRefFlat?.[1] ?? "";
 
   // Exporter block
   const exporterName =
-    findAfter(lines, /^Exporter\b\s*(.*)$/i) || 'FRIGORIFICO CONCEPCION S.A';
-  const ruc = findAfter(lines, /^R\.?U\.?C\.?\b\s*(.*)$/i) || '80023325-5';
+    findAfter(lines, /^Exporter\b\s*(.*)$/i) || "FRIGORIFICO CONCEPCION S.A";
+  const ruc = findAfter(lines, /^R\.?U\.?C\.?\b\s*(.*)$/i) || "80023325-5";
   const exporterAddress =
-    findAfter(lines, /^Address\b\s*(.*)$/i) || 'KM 6,5 CAMINO AEROPUERTO';
-  const exporterCity = findAfter(lines, /^City\b\s*(.*)$/i) || 'CONCEPCION';
-  const exporterCountry = findAfter(lines, /^Country\b\s*(.*)$/i) || 'PARAGUAY';
+    findAfter(lines, /^Address\b\s*(.*)$/i) || "KM 6,5 CAMINO AEROPUERTO";
+  const exporterCity = findAfter(lines, /^City\b\s*(.*)$/i) || "CONCEPCION";
+  const exporterCountry = findAfter(lines, /^Country\b\s*(.*)$/i) || "PARAGUAY";
 
   // Sales person
   const salesPerson = findAfter(lines, /^Sales\s*Person\b\s*(.*)$/i);
@@ -187,21 +183,21 @@ export async function parseSupplierContract(
   let clientCountry: string | undefined;
   if (addressOccurrences.length >= 2) {
     clientAddress = lines[addressOccurrences[1]]
-      .replace(/^Address\s*/i, '')
+      .replace(/^Address\s*/i, "")
       .trim();
   }
   const cityOccurrences = lines
     .map((l, i) => (/^City\b/i.test(l) ? i : -1))
     .filter((i) => i >= 0);
   if (cityOccurrences.length >= 2) {
-    clientCity = lines[cityOccurrences[1]].replace(/^City\s*/i, '').trim();
+    clientCity = lines[cityOccurrences[1]].replace(/^City\s*/i, "").trim();
   }
   const countryOccurrences = lines
     .map((l, i) => (/^Country\b/i.test(l) ? i : -1))
     .filter((i) => i >= 0);
   if (countryOccurrences.length >= 2) {
     clientCountry = lines[countryOccurrences[1]]
-      .replace(/^Country\s*/i, '')
+      .replace(/^Country\s*/i, "")
       .trim();
   }
 
@@ -224,7 +220,7 @@ export async function parseSupplierContract(
   // Products: look for the row with Quantity description + total
   // Pattern in source: "27,00 FROZEN OFFALS BOVINE LIVER, CARTONS WITH 10KG FIX WEIGHT IN BAGS 2.100,000 56.700,00"
   let quantity = 0;
-  let productDescription = '';
+  let productDescription = "";
   let unitPrice = 0;
   let totalAmount = 0;
 
@@ -242,8 +238,8 @@ export async function parseSupplierContract(
   }
 
   if (!quantity || !productDescription || !totalAmount) {
-    const rowMatch = text.match(
-  /([0-9.,]+)\s+([A-Z][A-Z\s,()/-]{8,})\s+([0-9.,]{4,})\s+([0-9.,]{4,})/,
+    const rowMatch = flatText.match(
+      /([0-9.,]+)\s+([A-Z][A-Z\s,()/-]{8,})\s+([0-9.,]{4,})\s+([0-9.,]{4,})/,
     );
     if (rowMatch) {
       quantity = quantity || parseNumber(rowMatch[1]);
@@ -262,11 +258,15 @@ export async function parseSupplierContract(
   let origin = findAfter(lines, /^Origin\b\s*(.*)$/i);
   let destination = findAfter(lines, /^Destination\b\s*(.*)$/i);
   if (!origin) {
-    const originMatch = text.match(/Origin\s*:?\s*([A-Z\s-]+?)(?=\s+Destination|\s+Incoterm|\n|$)/i);
+    const originMatch = flatText.match(
+      /Origin\s*:?\s*([A-Z\s-]+?)(?=\s+Destination|\s+Incoterm|$)/i,
+    );
     if (originMatch) origin = originMatch[1].trim();
   }
   if (!destination) {
-    const destMatch = text.match(/Destination\s*:?\s*([A-Z\s-]+?)(?=\s+Incoterm|\s+Shipment|\n|$)/i);
+    const destMatch = flatText.match(
+      /Destination\s*:?\s*([A-Z\s-]+?)(?=\s+Incoterm|\s+Shipment|$)/i,
+    );
     if (destMatch) destination = destMatch[1].trim();
   }
   const incoterm = findAfter(lines, /^Incoterm\s*:?\s*(.*)$/i);
@@ -303,14 +303,14 @@ export async function parseSupplierContract(
   let observations: string | undefined;
   if (obsIdx >= 0) {
     const collected: string[] = [];
-    const line = lines[obsIdx].replace(/^Obs\s*:\s*/i, '');
+    const line = lines[obsIdx].replace(/^Obs\s*:\s*/i, "");
     if (line) collected.push(line);
     for (let i = obsIdx + 1; i < lines.length; i++) {
       if (/^(Incoterm|Brand|Plant|Freight\s*cost|Insurance)/i.test(lines[i]))
         break;
       collected.push(lines[i]);
     }
-    observations = collected.join(' ').trim();
+    observations = collected.join(" ").trim();
   }
 
   // Bank
@@ -321,15 +321,13 @@ export async function parseSupplierContract(
   // intermediary, second to local bank. Same for Account Number.
   const swifts = lines.filter((l) => /^Swift\b/i.test(l));
   const accountNums = lines.filter((l) => /^Account\s*Number\b/i.test(l));
-  const intermediarySwift = swifts[0]
-    ?.replace(/^Swift\s*/i, '')
-    .trim();
-  const bankSwift = swifts[1]?.replace(/^Swift\s*/i, '').trim();
+  const intermediarySwift = swifts[0]?.replace(/^Swift\s*/i, "").trim();
+  const bankSwift = swifts[1]?.replace(/^Swift\s*/i, "").trim();
   const intermediaryAccountNumber = accountNums[0]
-    ?.replace(/^Account\s*Number\s*/i, '')
+    ?.replace(/^Account\s*Number\s*/i, "")
     .trim();
   const accountNumber = accountNums[1]
-    ?.replace(/^Account\s*Number\s*/i, '')
+    ?.replace(/^Account\s*Number\s*/i, "")
     .trim();
   const araNumber = findAfter(lines, /^ARA\s*Number\b\s*(.*)$/i);
   // Intermediary location often appears as a stand-alone line after the SWIFT

@@ -6,15 +6,9 @@
 // Print styling is inline so it travels with the component when
 // it's hosted on a standalone /print route.
 // =============================================================
-import type {
-  BankProfile,
-  Client,
-  Contact,
-  Entity,
-  Trade,
-} from '../../types';
-import { formatDate, formatTons, formatUSD } from '../format';
-import { computeFinancials } from '../finance';
+import type { BankProfile, Client, Contact, Entity, Trade } from "../../types";
+import { formatDate, formatTons, formatUSD } from "../format";
+import { computeFinancials } from "../finance";
 
 interface ContractHTMLProps {
   trade: Trade;
@@ -127,12 +121,12 @@ export function ContractHTML({
       {/* — header — */}
       <header
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
           paddingBottom: 10,
           marginBottom: 12,
-          borderBottom: '1px solid #111318',
+          borderBottom: "1px solid #111318",
         }}
       >
         <div>
@@ -141,7 +135,7 @@ export function ContractHTML({
             Contrato de Venta Internacional
           </div>
         </div>
-        <div style={{ textAlign: 'right' }}>
+        <div style={{ textAlign: "right" }}>
           <div className="ref-pill">N° {trade.trade_reference}</div>
           <div className="muted" style={{ marginTop: 4 }}>
             Date · {formatDate(signingDate)}
@@ -150,7 +144,7 @@ export function ContractHTML({
       </header>
 
       {/* — parties — */}
-  <section className="grid-2 split">
+      <section className="grid-2 split">
         <div>
           <h2>Seller / Vendedor</h2>
           <div className="field">
@@ -169,8 +163,8 @@ export function ContractHTML({
               <div className="field-label">Address</div>
               <div className="field-value">
                 {entity.address}
-                {entity.city ? `, ${entity.city}` : ''}
-                {entity.country ? `, ${entity.country}` : ''}
+                {entity.city ? `, ${entity.city}` : ""}
+                {entity.country ? `, ${entity.country}` : ""}
               </div>
             </div>
           )}
@@ -194,7 +188,7 @@ export function ContractHTML({
               <div className="field-value">
                 {[client.address, client.city, client.country]
                   .filter(Boolean)
-                  .join(', ')}
+                  .join(", ")}
               </div>
             </div>
           )}
@@ -212,37 +206,37 @@ export function ContractHTML({
       {/* — product — */}
       <section>
         <h2>Product / Producto</h2>
-        <div style={{ overflowX: 'auto' }}>
-        <table className="product-table" style={{ minWidth: 360 }}>
-          <thead>
-            <tr>
-              <th>Quantity</th>
-              <th>Description</th>
-              <th className="num">Unit price (USD)</th>
-              <th className="num">Total (USD)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{formatTons(trade.quantity_tons)}</td>
-              <td>{trade.product_description}</td>
-              <td className="num">
-                {formatUSD(trade.sale_unit_price).replace('$', '')}
-              </td>
-              <td className="num">
-                {formatUSD(fin.sale_total).replace('$', '')}
-              </td>
-            </tr>
-            <tr className="total">
-              <td colSpan={3} style={{ textAlign: 'right' }}>
-                Total contract value (USD)
-              </td>
-              <td className="num">
-                {formatUSD(fin.sale_total).replace('$', '')}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div style={{ overflowX: "auto" }}>
+          <table className="product-table" style={{ minWidth: 360 }}>
+            <thead>
+              <tr>
+                <th>Quantity</th>
+                <th>Description</th>
+                <th className="num">Unit price (USD)</th>
+                <th className="num">Total (USD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{formatTons(trade.quantity_tons)}</td>
+                <td>{trade.product_description}</td>
+                <td className="num">
+                  {formatUSD(trade.sale_unit_price).replace("$", "")}
+                </td>
+                <td className="num">
+                  {formatUSD(fin.sale_total).replace("$", "")}
+                </td>
+              </tr>
+              <tr className="total">
+                <td colSpan={3} style={{ textAlign: "right" }}>
+                  Total contract value (USD)
+                </td>
+                <td className="num">
+                  {formatUSD(fin.sale_total).replace("$", "")}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -326,15 +320,16 @@ export function ContractHTML({
             </div>
             <div
               className="field-value"
-              style={{ fontWeight: 600, fontSize: '11pt' }}
+              style={{ fontWeight: 600, fontSize: "11pt" }}
             >
               {formatUSD(advance)}
             </div>
             <div
               className="field-value"
-              style={{ fontSize: '9.5pt', color: '#434a5c', marginTop: 2 }}
+              style={{ fontSize: "9.5pt", color: "#434a5c", marginTop: 2 }}
             >
-              {trade.prepayment_condition || `Due ${formatDate(trade.advance_due_date ?? signingDate)}`}
+              {trade.prepayment_condition ||
+                `Due ${formatDate(trade.advance_due_date ?? signingDate)}`}
             </div>
           </div>
           <div className="section-box">
@@ -343,15 +338,15 @@ export function ContractHTML({
             </div>
             <div
               className="field-value"
-              style={{ fontWeight: 600, fontSize: '11pt' }}
+              style={{ fontWeight: 600, fontSize: "11pt" }}
             >
               {formatUSD(balance)}
             </div>
             <div
               className="field-value"
-              style={{ fontSize: '9.5pt', color: '#434a5c', marginTop: 2 }}
+              style={{ fontSize: "9.5pt", color: "#434a5c", marginTop: 2 }}
             >
-              {trade.balance_condition || '50% TT against copy of BOL by email'}
+              {trade.balance_condition || "50% TT against copy of BOL by email"}
             </div>
           </div>
         </div>
@@ -367,7 +362,7 @@ export function ContractHTML({
             {bank.beneficiary_address && (
               <div
                 className="field-value"
-                style={{ fontSize: '9.5pt', color: '#434a5c' }}
+                style={{ fontSize: "9.5pt", color: "#434a5c" }}
               >
                 {bank.beneficiary_address}
               </div>
@@ -376,14 +371,14 @@ export function ContractHTML({
               Beneficiary bank
             </div>
             <div className="field-value">{bank.bank_name}</div>
-            <div className="field-value" style={{ fontSize: '9.5pt' }}>
+            <div className="field-value" style={{ fontSize: "9.5pt" }}>
               SWIFT: {bank.bank_swift}
             </div>
-            <div className="field-value" style={{ fontSize: '9.5pt' }}>
+            <div className="field-value" style={{ fontSize: "9.5pt" }}>
               Account N°: {bank.account_number}
             </div>
             {bank.ara_number && (
-              <div className="field-value" style={{ fontSize: '9.5pt' }}>
+              <div className="field-value" style={{ fontSize: "9.5pt" }}>
                 ARA: {bank.ara_number}
               </div>
             )}
@@ -392,21 +387,19 @@ export function ContractHTML({
             {(bank.intermediary_bank_name || bank.intermediary_bank_swift) && (
               <>
                 <div className="field-label">Intermediary bank</div>
-                <div className="field-value">
-                  {bank.intermediary_bank_name}
-                </div>
+                <div className="field-value">{bank.intermediary_bank_name}</div>
                 {bank.intermediary_bank_swift && (
-                  <div className="field-value" style={{ fontSize: '9.5pt' }}>
+                  <div className="field-value" style={{ fontSize: "9.5pt" }}>
                     SWIFT: {bank.intermediary_bank_swift}
                   </div>
                 )}
                 {bank.intermediary_account_number && (
-                  <div className="field-value" style={{ fontSize: '9.5pt' }}>
+                  <div className="field-value" style={{ fontSize: "9.5pt" }}>
                     Account: {bank.intermediary_account_number}
                   </div>
                 )}
                 {bank.intermediary_location && (
-                  <div className="field-value" style={{ fontSize: '9.5pt' }}>
+                  <div className="field-value" style={{ fontSize: "9.5pt" }}>
                     {bank.intermediary_location}
                   </div>
                 )}
@@ -435,7 +428,7 @@ export function ContractHTML({
             Seller signature
           </div>
           <strong>{entity.name}</strong>
-          <div style={{ color: '#5e6577', fontSize: '9.5pt' }}>
+          <div style={{ color: "#5e6577", fontSize: "9.5pt" }}>
             {entity.country}
           </div>
         </div>
@@ -444,7 +437,7 @@ export function ContractHTML({
             Buyer signature
           </div>
           <strong>{client.company_name}</strong>
-          <div style={{ color: '#5e6577', fontSize: '9.5pt' }}>
+          <div style={{ color: "#5e6577", fontSize: "9.5pt" }}>
             {client.country}
           </div>
         </div>
@@ -455,11 +448,11 @@ export function ContractHTML({
         style={{
           marginTop: 22,
           paddingTop: 6,
-          borderTop: '1px solid #111318',
+          borderTop: "1px solid #111318",
           fontSize: 8,
-          color: '#4b5160',
-          textAlign: 'center',
-          letterSpacing: '0.04em',
+          color: "#4b5160",
+          textAlign: "center",
+          letterSpacing: "0.04em",
         }}
       >
         Generated by TradeMirror OS · {entity.name} · {formatDate(signingDate)}

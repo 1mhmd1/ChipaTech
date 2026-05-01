@@ -738,10 +738,38 @@ export async function downloadPdf(
   const buf = new Uint8Array(bytes.byteLength);
   buf.set(bytes);
   const blob = new Blob([buf], { type: 'application/pdf' });
-  const nav = typeof navigator !== 'undefined' ? navigator : undefined;
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
+  // --- Primary path: object URL (works on all modern browsers incl. iOS Safari) ---
+  // On iOS, window.open() with a blob URL opens the PDF in a new tab
+  // where the user can tap "Open in…" / "Save to Files". This is the most
+  // reliable experience. On desktop we use a hidden <a download> instead.
+  const canCreateObjectUrl =
+    typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function';
+
+  if (canCreateObjectUrl) {
+    const url = URL.createObjectURL(blob);
+    if (isIOS) {
+      // iOS Safari: open in new tab → user taps share icon → Save to Files
+      window.open(url, '_blank');
+    } else {
+      // Desktop / Android: trigger a direct download via hidden anchor
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    // Revoke after a generous delay so the browser has time to read the blob
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    return;
+  }
+
+  // --- Secondary path: Web Share API (only reached in very old WebViews
+  // where createObjectURL is unavailable — practically never on modern iOS) ---
+  const nav = typeof navigator !== 'undefined' ? navigator : undefined;
   if (
     nav &&
     typeof (nav as Navigator).share === 'function' &&
@@ -749,38 +777,16 @@ export async function downloadPdf(
   ) {
     try {
       const file = new File([blob], fileName, { type: 'application/pdf' });
-      if ((nav as Navigator).canShare?.({ files: [file] })) {
+      if ((nav as Navigator).canShare({ files: [file] })) {
         await (nav as Navigator).share({ files: [file], title: fileName });
         return;
       }
     } catch {
-      // fall through to download/open
+      // AbortError (user dismissed sheet) or NotAllowedError — fall through
     }
   }
 
-  const canCreateObjectUrl = typeof URL !== 'undefined' && URL.createObjectURL;
-  if (canCreateObjectUrl) {
-    const url = URL.createObjectURL(blob);
-    if (isIOS) {
-      window.open(url, '_blank');
-    } else {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      if (typeof a.click === 'function') {
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } else {
-        window.open(url, '_blank');
-      }
-    }
-    if (typeof URL.revokeObjectURL === 'function') {
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-    return;
-  }
-
+  // --- Last resort: data URL via FileReader (very old browsers) ---
   await new Promise<void>((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {

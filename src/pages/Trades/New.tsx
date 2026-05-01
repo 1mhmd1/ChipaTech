@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { PageBody, PageHeader } from '../../components/layout/PageHeader';
-import { Card } from '../../components/ui/Card';
-import { Field, Select } from '../../components/ui/Field';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { PageBody, PageHeader } from "../../components/layout/PageHeader";
+import { Card } from "../../components/ui/Card";
+import { Field, Select } from "../../components/ui/Field";
 import {
   banksDB,
   clientsDB,
@@ -13,20 +13,20 @@ import {
   nowIso,
   tradesDB,
   uid,
-} from '../../lib/storage/db';
-import { parseSupplierContract } from '../../lib/pdf/parser';
-import { fileToArrayBuffer } from '../../lib/pdf/generator';
-import { saveDocumentBlob } from '../../lib/storage/files';
-import { computeFinancials } from '../../lib/finance';
-import { bestMatch } from '../../lib/match';
-import { useAppStore } from '../../store/appStore';
-import type { Client, ParsedContract, Trade } from '../../types';
-import clsx from 'clsx';
-import { Modal } from '../../components/ui/Modal';
-import { Input } from '../../components/ui/Field';
-import { Spinner } from '../../components/ui/Spinner';
+} from "../../lib/storage/db";
+import { parseSupplierContract } from "../../lib/pdf/parser";
+import { fileToArrayBuffer } from "../../lib/pdf/generator";
+import { saveDocumentBlob } from "../../lib/storage/files";
+import { computeFinancials } from "../../lib/finance";
+import { bestMatch } from "../../lib/match";
+import { useAppStore } from "../../store/appStore";
+import type { Client, ParsedContract, Trade } from "../../types";
+import clsx from "clsx";
+import { Modal } from "../../components/ui/Modal";
+import { Input } from "../../components/ui/Field";
+import { Spinner } from "../../components/ui/Spinner";
 
-type Step = 'upload' | 'select' | 'review';
+type Step = "upload" | "select" | "review";
 
 export function NewTradePage() {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ export function NewTradePage() {
   const user = useAppStore((s) => s.user);
   // Fast-flow: dashboard can hand us a pre-selected File via location.state
   const handoff = (location.state as { file?: File } | null)?.file;
-  const [step, setStep] = useState<Step>('upload');
+  const [step, setStep] = useState<Step>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [fileBytes, setFileBytes] = useState<ArrayBuffer | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -50,73 +50,73 @@ export function NewTradePage() {
   // Default to the LLC entity if it exists, else first
   const defaultEntity =
     entities.find((e) => /llc|farm/i.test(e.name)) ?? entities[0];
-  const [entityId, setEntityId] = useState(defaultEntity?.id ?? '');
-  const [bankProfileId, setBankProfileId] = useState('');
-  const [clientId, setClientId] = useState(clients[0]?.id ?? '');
+  const [entityId, setEntityId] = useState(defaultEntity?.id ?? "");
+  const [bankProfileId, setBankProfileId] = useState("");
+  const [clientId, setClientId] = useState(clients[0]?.id ?? "");
   const [contactId, setContactId] = useState(
-    contactsDB.default()?.id ?? contacts[0]?.id ?? '',
+    contactsDB.default()?.id ?? contacts[0]?.id ?? "",
   );
 
   // Smart-match results — surfaced as a banner above the form
   const [autoMatch, setAutoMatch] = useState<
-    | { kind: 'matched'; client: Client; score: number }
-    | { kind: 'suggest_new'; parsedName: string }
+    | { kind: "matched"; client: Client; score: number }
+    | { kind: "suggest_new"; parsedName: string }
     | null
   >(null);
   const [showCreateClient, setShowCreateClient] = useState(false);
 
   const emptyParsedContract = (): ParsedContract => ({
-    contractRef: '',
-    exporterName: '',
-    exporterRUC: '',
-    exporterAddress: '',
-    exporterCity: '',
-    exporterCountry: '',
-    salesPerson: '',
-    salesAssistant: '',
-    dateOfIssue: '',
-    exporterEmail: '',
-    clientName: '',
-    clientAddress: '',
-    clientCity: '',
-    clientCountry: '',
-    contactPerson: '',
-    contactPhone: '',
-    contactEmail: '',
-    payerName: '',
-    payerCountry: '',
-    payerCompanyCountry: '',
+    contractRef: "",
+    exporterName: "",
+    exporterRUC: "",
+    exporterAddress: "",
+    exporterCity: "",
+    exporterCountry: "",
+    salesPerson: "",
+    salesAssistant: "",
+    dateOfIssue: "",
+    exporterEmail: "",
+    clientName: "",
+    clientAddress: "",
+    clientCity: "",
+    clientCountry: "",
+    contactPerson: "",
+    contactPhone: "",
+    contactEmail: "",
+    payerName: "",
+    payerCountry: "",
+    payerCompanyCountry: "",
     quantity: 0,
-    productDescription: '',
+    productDescription: "",
     unitPrice: 0,
     totalAmount: 0,
-    brand: '',
-    validity: '',
-    temperature: '',
-    packing: '',
-    shipmentDate: '',
-    origin: '',
-    destination: '',
-    incoterm: '',
-    plantNo: '',
-    freightCondition: '',
+    brand: "",
+    validity: "",
+    temperature: "",
+    packing: "",
+    shipmentDate: "",
+    origin: "",
+    destination: "",
+    incoterm: "",
+    plantNo: "",
+    freightCondition: "",
     freightCost: 0,
     insuranceCost: 0,
-    prepaymentCondition: '',
-    balanceCondition: '',
-    observations: '',
-    lawAndJurisdiction: '',
-    requiresInspection: '',
-    beneficiaryName: '',
-    beneficiaryAddress: '',
-    intermediaryBank: '',
-    intermediarySwift: '',
-    intermediaryAccountNumber: '',
-    intermediaryLocation: '',
-    bankParaguay: '',
-    bankSwift: '',
-    accountNumber: '',
-    araNumber: '',
+    prepaymentCondition: "",
+    balanceCondition: "",
+    observations: "",
+    lawAndJurisdiction: "",
+    requiresInspection: "",
+    beneficiaryName: "",
+    beneficiaryAddress: "",
+    intermediaryBank: "",
+    intermediarySwift: "",
+    intermediaryAccountNumber: "",
+    intermediaryLocation: "",
+    bankParaguay: "",
+    bankSwift: "",
+    accountNumber: "",
+    araNumber: "",
   });
 
   // When entity changes, default the bank profile
@@ -157,12 +157,12 @@ export function NewTradePage() {
         if (match) {
           setClientId(match.item.id);
           setAutoMatch({
-            kind: 'matched',
+            kind: "matched",
             client: match.item,
             score: match.score,
           });
         } else {
-          setAutoMatch({ kind: 'suggest_new', parsedName });
+          setAutoMatch({ kind: "suggest_new", parsedName });
         }
       }
       // 2. Default contact = the one flagged is_default
@@ -170,14 +170,14 @@ export function NewTradePage() {
       if (defaultContact) setContactId(defaultContact.id);
       // 3. Bank profile already cascades from entityId via useEffect
 
-      setStep('select');
+      setStep("select");
     } catch (e) {
       console.error(e);
       setParsed(emptyParsedContract());
       setAutoMatch(null);
-      setStep('select');
+      setStep("select");
       setParseError(
-        'Could not parse this PDF on this device. You can continue and fill the fields manually in the next step.',
+        "Could not parse this PDF on this device. You can continue and fill the fields manually in the next step.",
       );
     } finally {
       setParsing(false);
@@ -195,10 +195,10 @@ export function NewTradePage() {
 
   const onCreateClientFromParsed = (newClient: Client) => {
     clientsDB.insert(newClient);
-  setClients(clientsDB.list());
+    setClients(clientsDB.list());
     setClientId(newClient.id);
     setAutoMatch({
-      kind: 'matched',
+      kind: "matched",
       client: newClient,
       score: 1,
     });
@@ -217,110 +217,110 @@ export function NewTradePage() {
     if (!entityId || !bankProfileId || !clientId || !contactId) return;
     setCreating(true);
     try {
-    const reference = tradesDB.nextReference();
-    const tradeId = uid('trd');
-    const now = nowIso();
+      const reference = tradesDB.nextReference();
+      const tradeId = uid("trd");
+      const now = nowIso();
 
-    const fin = computeFinancials({
-      quantity_tons: parsed.quantity,
-      frigo_total: parsed.totalAmount,
-      sale_unit_price: parsed.unitPrice, // start at parity — admin marks it up next
-      shipping_cost: 0,
-      insurance_cost: 0,
-      bank_fees: 0,
-    });
-
-    const trade: Trade = {
-      id: tradeId,
-      trade_reference: reference,
-      entity_id: entityId,
-      bank_profile_id: bankProfileId,
-      client_id: clientId,
-      contact_id: contactId,
-      contract_date: now,
-      frigo_contract_ref: parsed.contractRef || '—',
-      quantity_tons: parsed.quantity,
-      product_description: parsed.productDescription,
-      frigo_unit_price: parsed.unitPrice,
-      frigo_total: parsed.totalAmount,
-      sale_unit_price: parsed.unitPrice,
-      sale_total: fin.sale_total,
-      shipping_cost: 0,
-      insurance_cost: 0,
-      bank_fees: 0,
-      total_costs: fin.total_costs,
-      net_profit: fin.net_profit,
-      brand: parsed.brand,
-      validity: parsed.validity,
-      temperature: parsed.temperature,
-      packing: parsed.packing,
-      shipment_date: parsed.shipmentDate,
-      origin: parsed.origin,
-      destination: parsed.destination,
-      incoterm: parsed.incoterm,
-      plant_no: parsed.plantNo,
-      freight_condition: parsed.freightCondition,
-      observations: parsed.observations,
-      prepayment_condition: parsed.prepaymentCondition,
-      balance_condition: parsed.balanceCondition,
-      advance_status: 'pending',
-      balance_status: 'pending',
-      trade_status: 'draft',
-      created_at: now,
-      updated_at: now,
-    };
-
-    tradesDB.insert(trade);
-
-    // Save the original supplier PDF into the trade folder. In Supabase
-    // mode this uploads to the `trade-documents` bucket; in demo mode
-    // it inlines as a data URL so localStorage works offline.
-    const cloneForBase64 = fileBytes.slice(0);
-    const bytes = new Uint8Array(cloneForBase64);
-    try {
-      const storagePath = await saveDocumentBlob(
-        tradeId,
-        'frigo_contract',
-        bytes,
-        file?.name ?? 'frigo-contract.pdf',
-      );
-      docsDB.insert({
-        id: uid('doc'),
-        trade_id: tradeId,
-        document_type: 'frigo_contract',
-        file_name: file?.name ?? 'frigo-contract.pdf',
-        storage_path: storagePath,
-        uploaded_by: user.id,
-        uploaded_at: now,
+      const fin = computeFinancials({
+        quantity_tons: parsed.quantity,
+        frigo_total: parsed.totalAmount,
+        sale_unit_price: parsed.unitPrice, // start at parity — admin marks it up next
+        shipping_cost: 0,
+        insurance_cost: 0,
+        bank_fees: 0,
       });
-    } catch (err) {
-      console.error('Failed to upload supplier PDF', err);
-      const msg = (err as Error).message ?? '';
-      const isQuota =
-        /quota/i.test(msg) ||
-        /exceed/i.test(msg) ||
-        err instanceof DOMException &&
-          (err.name === 'QuotaExceededError' ||
-            err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
-      alert(
-        isQuota
-          ? `Could not save the supplier PDF — the browser ran out of storage space. ` +
-              `The trade was still created; open it and use the "Re-upload supplier PDF" prompt in the editor. ` +
-              `If you keep hitting this, set up Supabase env vars so files go to the cloud instead.`
-          : `Could not upload the supplier PDF: ${msg}. ` +
-              `The trade was created — open it and use the "Re-upload supplier PDF" prompt in the editor to fix it.`,
+
+      const trade: Trade = {
+        id: tradeId,
+        trade_reference: reference,
+        entity_id: entityId,
+        bank_profile_id: bankProfileId,
+        client_id: clientId,
+        contact_id: contactId,
+        contract_date: now,
+        frigo_contract_ref: parsed.contractRef || "—",
+        quantity_tons: parsed.quantity,
+        product_description: parsed.productDescription,
+        frigo_unit_price: parsed.unitPrice,
+        frigo_total: parsed.totalAmount,
+        sale_unit_price: parsed.unitPrice,
+        sale_total: fin.sale_total,
+        shipping_cost: 0,
+        insurance_cost: 0,
+        bank_fees: 0,
+        total_costs: fin.total_costs,
+        net_profit: fin.net_profit,
+        brand: parsed.brand,
+        validity: parsed.validity,
+        temperature: parsed.temperature,
+        packing: parsed.packing,
+        shipment_date: parsed.shipmentDate,
+        origin: parsed.origin,
+        destination: parsed.destination,
+        incoterm: parsed.incoterm,
+        plant_no: parsed.plantNo,
+        freight_condition: parsed.freightCondition,
+        observations: parsed.observations,
+        prepayment_condition: parsed.prepaymentCondition,
+        balance_condition: parsed.balanceCondition,
+        advance_status: "pending",
+        balance_status: "pending",
+        trade_status: "draft",
+        created_at: now,
+        updated_at: now,
+      };
+
+      tradesDB.insert(trade);
+
+      // Save the original supplier PDF into the trade folder. In Supabase
+      // mode this uploads to the `trade-documents` bucket; in demo mode
+      // it inlines as a data URL so localStorage works offline.
+      const cloneForBase64 = fileBytes.slice(0);
+      const bytes = new Uint8Array(cloneForBase64);
+      try {
+        const storagePath = await saveDocumentBlob(
+          tradeId,
+          "frigo_contract",
+          bytes,
+          file?.name ?? "frigo-contract.pdf",
+        );
+        docsDB.insert({
+          id: uid("doc"),
+          trade_id: tradeId,
+          document_type: "frigo_contract",
+          file_name: file?.name ?? "frigo-contract.pdf",
+          storage_path: storagePath,
+          uploaded_by: user.id,
+          uploaded_at: now,
+        });
+      } catch (err) {
+        console.error("Failed to upload supplier PDF", err);
+        const msg = (err as Error).message ?? "";
+        const isQuota =
+          /quota/i.test(msg) ||
+          /exceed/i.test(msg) ||
+          (err instanceof DOMException &&
+            (err.name === "QuotaExceededError" ||
+              err.name === "NS_ERROR_DOM_QUOTA_REACHED"));
+        alert(
+          isQuota
+            ? `Could not save the supplier PDF — the browser ran out of storage space. ` +
+                `The trade was still created; open it and use the "Re-upload supplier PDF" prompt in the editor. ` +
+                `If you keep hitting this, set up Supabase env vars so files go to the cloud instead.`
+            : `Could not upload the supplier PDF: ${msg}. ` +
+                `The trade was created — open it and use the "Re-upload supplier PDF" prompt in the editor to fix it.`,
+        );
+      }
+
+      logActivity(
+        tradeId,
+        "trade_created",
+        `Trade ${reference} created from supplier contract ${parsed.contractRef}`,
+        undefined,
+        user.id,
       );
-    }
 
-    logActivity(
-      tradeId,
-      'trade_created',
-      `Trade ${reference} created from supplier contract ${parsed.contractRef}`,
-      undefined,
-      user.id,
-    );
-
-    navigate(`/trades/${tradeId}/editor`);
+      navigate(`/trades/${tradeId}/editor`);
     } finally {
       setCreating(false);
     }
@@ -333,11 +333,11 @@ export function NewTradePage() {
         breadcrumb={
           <span>
             <button
-              onClick={() => navigate('/trades')}
+              onClick={() => navigate("/trades")}
               className="hover:text-ink-700"
             >
               Trades
-            </button>{' '}
+            </button>{" "}
             / New
           </span>
         }
@@ -346,14 +346,14 @@ export function NewTradePage() {
         <div className="mx-auto max-w-4xl">
           <Stepper step={step} />
 
-          {step === 'upload' && (
+          {step === "upload" && (
             <Card>
               <h2 className="text-base font-semibold text-ink-900">
                 Upload supplier contract
               </h2>
               <p className="text-sm text-ink-500 mt-1">
-                Drop the Frigorífico Concepción PDF. We'll parse the cargo, pricing
-                and bank details automatically.
+                Drop the Frigorífico Concepción PDF. We'll parse the cargo,
+                pricing and bank details automatically.
               </p>
 
               <div
@@ -361,10 +361,10 @@ export function NewTradePage() {
                 onDrop={onDrop}
                 onClick={() => fileInput.current?.click()}
                 className={clsx(
-                  'mt-5 cursor-pointer rounded-xl border-2 border-dashed bg-ink-50/50 px-4 py-8 sm:px-6 sm:py-12 text-center transition',
+                  "mt-5 cursor-pointer rounded-xl border-2 border-dashed bg-ink-50/50 px-4 py-8 sm:px-6 sm:py-12 text-center transition",
                   parsing
-                    ? 'border-brand-300 bg-brand-50/40'
-                    : 'border-ink-300 hover:border-brand-400 hover:bg-brand-50/30',
+                    ? "border-brand-300 bg-brand-50/40"
+                    : "border-ink-300 hover:border-brand-400 hover:bg-brand-50/30",
                 )}
               >
                 <input
@@ -407,9 +407,16 @@ export function NewTradePage() {
                       stroke="currentColor"
                       strokeWidth="1.5"
                     >
-                      <path d="M14 3H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V7l-4-4z" strokeLinejoin="round" />
+                      <path
+                        d="M14 3H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V7l-4-4z"
+                        strokeLinejoin="round"
+                      />
                       <path d="M14 3v4h4" strokeLinejoin="round" />
-                      <path d="M12 12v6M9 15l3-3 3 3" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d="M12 12v6M9 15l3-3 3 3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     <div className="text-sm font-medium text-ink-700">
                       Drag & drop a PDF here
@@ -429,7 +436,7 @@ export function NewTradePage() {
             </Card>
           )}
 
-          {step === 'select' && parsed && (
+          {step === "select" && parsed && (
             <Card>
               <h2 className="text-base font-semibold text-ink-900">
                 Configure the trade
@@ -439,18 +446,31 @@ export function NewTradePage() {
                 defaults.
               </p>
 
-              {autoMatch?.kind === 'matched' && (
+              {autoMatch?.kind === "matched" && (
                 <div className="mt-4 flex items-start gap-3 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-success-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5 text-success-600 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                   <div className="flex-1">
                     <div className="font-semibold text-success-700">
-                      Matched existing client ({Math.round(autoMatch.score * 100)}% confidence)
+                      Matched existing client (
+                      {Math.round(autoMatch.score * 100)}% confidence)
                     </div>
                     <div className="text-success-700/80 mt-0.5">
-                      We auto-selected{' '}
-                      <span className="font-medium">{autoMatch.client.company_name}</span>{' '}
+                      We auto-selected{" "}
+                      <span className="font-medium">
+                        {autoMatch.client.company_name}
+                      </span>{" "}
                       based on the parsed name "{parsed.clientName}".
                     </div>
                   </div>
@@ -463,9 +483,15 @@ export function NewTradePage() {
                 </div>
               )}
 
-              {autoMatch?.kind === 'suggest_new' && (
+              {autoMatch?.kind === "suggest_new" && (
                 <div className="mt-4 flex items-start gap-3 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-warning-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-5 w-5 text-warning-600 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M12 9v4M12 17h.01" strokeLinecap="round" />
                     <circle cx="12" cy="12" r="9" />
                   </svg>
@@ -474,8 +500,10 @@ export function NewTradePage() {
                       No matching client found
                     </div>
                     <div className="text-warning-700/80 mt-0.5">
-                      The PDF mentions{' '}
-                      <span className="font-medium">"{autoMatch.parsedName}"</span>{' '}
+                      The PDF mentions{" "}
+                      <span className="font-medium">
+                        "{autoMatch.parsedName}"
+                      </span>{" "}
                       — pick from your existing list, or create a new client
                       pre-filled with parsed details.
                     </div>
@@ -542,7 +570,7 @@ export function NewTradePage() {
                   >
                     {contacts.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.full_name} {c.is_default ? '(default)' : ''}
+                        {c.full_name} {c.is_default ? "(default)" : ""}
                       </option>
                     ))}
                   </Select>
@@ -554,12 +582,30 @@ export function NewTradePage() {
                   Detected from PDF
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-ink-700">
-                  <div>Contract: <span className="font-mono">{parsed.contractRef || '—'}</span></div>
-                  <div>Quantity: <span className="font-medium">{parsed.quantity} t</span></div>
-                  <div>Product: <span className="text-ink-600">{parsed.productDescription || '—'}</span></div>
-                  <div>Frigo total: <span className="font-medium">${parsed.totalAmount.toFixed(2)}</span></div>
-                  <div>Origin: {parsed.origin || '—'}</div>
-                  <div>Destination: {parsed.destination || '—'}</div>
+                  <div>
+                    Contract:{" "}
+                    <span className="font-mono">
+                      {parsed.contractRef || "—"}
+                    </span>
+                  </div>
+                  <div>
+                    Quantity:{" "}
+                    <span className="font-medium">{parsed.quantity} t</span>
+                  </div>
+                  <div>
+                    Product:{" "}
+                    <span className="text-ink-600">
+                      {parsed.productDescription || "—"}
+                    </span>
+                  </div>
+                  <div>
+                    Frigo total:{" "}
+                    <span className="font-medium">
+                      ${parsed.totalAmount.toFixed(2)}
+                    </span>
+                  </div>
+                  <div>Origin: {parsed.origin || "—"}</div>
+                  <div>Destination: {parsed.destination || "—"}</div>
                 </div>
               </div>
 
@@ -567,7 +613,7 @@ export function NewTradePage() {
                 <button
                   className="btn-ghost"
                   onClick={() => {
-                    setStep('upload');
+                    setStep("upload");
                     setFile(null);
                     setParsed(null);
                     setFileBytes(null);
@@ -625,29 +671,34 @@ function CreateClientModal({
   parsed: ParsedContract;
   onCreate: (client: Client) => void;
 }) {
-  const [draft, setDraft] = useState<Omit<Client, 'id' | 'created_at'>>({
-    company_name: parsed.clientName ?? '',
-    address: parsed.clientAddress ?? '',
-    city: parsed.clientCity ?? '',
-    country: parsed.clientCountry ?? '',
-    tax_id: '',
-    contact_name: parsed.contactPerson ?? '',
-    contact_email: parsed.contactEmail ?? '',
-    contact_phone: parsed.contactPhone ?? '',
-    notes: '',
+  const [draft, setDraft] = useState<Omit<Client, "id" | "created_at">>({
+    company_name: parsed.clientName ?? "",
+    address: parsed.clientAddress ?? "",
+    city: parsed.clientCity ?? "",
+    country: parsed.clientCountry ?? "",
+    tax_id: "",
+    contact_name: parsed.contactPerson ?? "",
+    contact_email: parsed.contactEmail ?? "",
+    contact_phone: parsed.contactPhone ?? "",
+    notes: "",
   });
 
   const submit = () => {
     if (!draft.company_name) return;
     onCreate({
       ...draft,
-      id: uid('cli'),
+      id: uid("cli"),
       created_at: nowIso(),
     });
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Create client from PDF" size="lg">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Create client from PDF"
+      size="lg"
+    >
       <p className="text-sm text-ink-500 mb-4">
         Pre-filled from the parsed contract — review and adjust before saving.
       </p>
@@ -671,9 +722,7 @@ function CreateClientModal({
         <Field label="City">
           <Input
             value={draft.city}
-            onChange={(e) =>
-              setDraft((d) => ({ ...d, city: e.target.value }))
-            }
+            onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
           />
         </Field>
         <Field label="Address" className="sm:col-span-2">
@@ -719,7 +768,9 @@ function CreateClientModal({
         </Field>
       </div>
       <div className="mt-5 flex justify-end gap-2">
-        <button onClick={onClose} className="btn-secondary">Cancel</button>
+        <button onClick={onClose} className="btn-secondary">
+          Cancel
+        </button>
         <button
           onClick={submit}
           className="btn-primary"
@@ -734,9 +785,9 @@ function CreateClientModal({
 
 function Stepper({ step }: { step: Step }) {
   const items: { key: Step; label: string }[] = [
-    { key: 'upload', label: '1. Upload PDF' },
-    { key: 'select', label: '2. Configure' },
-    { key: 'review', label: '3. Edit & generate' },
+    { key: "upload", label: "1. Upload PDF" },
+    { key: "select", label: "2. Configure" },
+    { key: "review", label: "3. Edit & generate" },
   ];
   const idx = items.findIndex((i) => i.key === step);
   return (
@@ -745,12 +796,12 @@ function Stepper({ step }: { step: Step }) {
         <div key={it.key} className="flex items-center">
           <span
             className={clsx(
-              'rounded-full px-3 py-1 font-medium',
+              "rounded-full px-3 py-1 font-medium",
               i < idx
-                ? 'bg-success-50 text-success-700'
+                ? "bg-success-50 text-success-700"
                 : i === idx
-                  ? 'bg-ink-900 text-white'
-                  : 'bg-ink-100 text-ink-500',
+                  ? "bg-ink-900 text-white"
+                  : "bg-ink-100 text-ink-500",
             )}
           >
             {it.label}

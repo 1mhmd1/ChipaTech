@@ -10,29 +10,23 @@
 // layout as the single source of truth.
 // ============================================================
 
-let pdfjsCache: typeof import('pdfjs-dist') | null = null;
-let pdfjsWorkerReady = true;
-
-function isLikelyMobile(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-}
+let pdfjsCache: typeof import("pdfjs-dist") | null = null;
+let pdfjsWorkerReady = false;
 
 async function loadPdfjs() {
   if (pdfjsCache) return pdfjsCache;
-  const useLegacy = isLikelyMobile();
-  const pdfjsLib = useLegacy
-    ? await import('pdfjs-dist/legacy/build/pdf.mjs')
-    : await import('pdfjs-dist');
+  const pdfjsLib = await import("pdfjs-dist");
+  // Try to load the web worker for performance. If it fails (e.g. strict
+  // CSP, old WebView, iOS Safari limitations) we clear workerSrc so
+  // pdfjs falls back to main-thread parsing automatically.
   try {
-    const worker = useLegacy
-      ? await import('pdfjs-dist/legacy/build/pdf.worker.mjs?url')
-      : await import('pdfjs-dist/build/pdf.worker.mjs?url');
+    const worker = await import("pdfjs-dist/build/pdf.worker.mjs?url");
     pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
     pdfjsWorkerReady = true;
   } catch {
-    // Mobile browsers or CSP can block module workers.
-    // We'll fall back to main-thread parsing instead.
+    // Browsers that block module workers (e.g. iOS WKWebView with strict CSP)
+    // will parse on the main thread — slower but fully functional.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "";
     pdfjsWorkerReady = false;
   }
   pdfjsCache = pdfjsLib;
@@ -40,19 +34,20 @@ async function loadPdfjs() {
 }
 
 async function getPdfDocument(
-  pdfjs: typeof import('pdfjs-dist'),
+  pdfjs: typeof import("pdfjs-dist"),
   data: ArrayBuffer,
 ) {
   try {
     const params = {
       data,
-      disableWorker: isLikelyMobile() ? true : !pdfjsWorkerReady,
+      disableWorker: !pdfjsWorkerReady,
       isEvalSupported: false,
       disableFontFace: true,
       useSystemFonts: true,
     } as unknown as Record<string, unknown>;
     return await pdfjs.getDocument(params).promise;
   } catch {
+    // Last-resort retry: fully disable the worker (handles iOS WKWebView)
     const params = {
       data,
       disableWorker: true,
@@ -67,8 +62,8 @@ async function getPdfDocument(
 // ---------- Types ----------
 export interface TextRun {
   text: string;
-  x: number;        // PDF coordinates: bottom-left origin
-  y: number;        // baseline Y
+  x: number; // PDF coordinates: bottom-left origin
+  y: number; // baseline Y
   width: number;
   height: number;
   fontSize: number;
@@ -95,9 +90,7 @@ export interface PageLayout {
 }
 
 // ---------- Extraction ----------
-export async function extractLayout(
-  bytes: ArrayBuffer,
-): Promise<PageLayout> {
+export async function extractLayout(bytes: ArrayBuffer): Promise<PageLayout> {
   const pdfjs = await loadPdfjs();
   // Clone bytes so pdfjs can't detach our caller's buffer
   const safe = bytes.slice(0);
@@ -156,16 +149,16 @@ function groupIntoLines(items: TextRun[], tolerance = 3): LayoutLine[] {
 
 const norm = (s: string) =>
   s
-  .replace(/[\u00A0]/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/[\u00A0]/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
 
-export type Column = 'left' | 'right' | 'any';
+export type Column = "left" | "right" | "any";
 
 function isInColumn(x: number, column: Column, midX: number): boolean {
-  if (column === 'any') return true;
-  if (column === 'left') return x < midX;
+  if (column === "any") return true;
+  if (column === "left") return x < midX;
   return x >= midX;
 }
 
@@ -173,7 +166,7 @@ function isInColumn(x: number, column: Column, midX: number): boolean {
 export function findLabel(
   layout: PageLayout,
   label: string,
-  column: Column = 'any',
+  column: Column = "any",
   occurrence = 0,
 ): { line: LayoutLine; labelItem: TextRun } | null {
   const target = norm(label);
@@ -194,7 +187,7 @@ export function findLabel(
 export function findLabelStartsWith(
   layout: PageLayout,
   prefix: string,
-  column: Column = 'any',
+  column: Column = "any",
   occurrence = 0,
 ): { line: LayoutLine; labelItem: TextRun } | null {
   const target = norm(prefix);
@@ -225,7 +218,7 @@ export function findLabelBelow(
   layout: PageLayout,
   label: string,
   belowY: number,
-  column: Column = 'any',
+  column: Column = "any",
   startsWith = false,
 ): { line: LayoutLine; labelItem: TextRun } | null {
   const target = norm(label);
@@ -258,8 +251,8 @@ export function valueItemsAfter(
   const midX = pageWidth / 2;
   const minX = labelItem.x + labelItem.width + 0.5;
   let maxX: number;
-  if (column === 'left') maxX = midX - 2;
-  else if (column === 'right') maxX = pageWidth - 4;
+  if (column === "left") maxX = midX - 2;
+  else if (column === "right") maxX = pageWidth - 4;
   else maxX = pageWidth - 4;
 
   const candidates = line.items
@@ -331,7 +324,7 @@ export function expandRectRight(
   // doesn't graze the vertical separator lines (the small dot
   // artifacts in the previous render).
   const midX = pageWidth / 2;
-  const colEnd = column === 'left' ? midX - 8 : pageWidth - 12;
+  const colEnd = column === "left" ? midX - 8 : pageWidth - 12;
   const guardSet = new Set(guards);
   const blocker = line.items
     .filter((i) => !guardSet.has(i))
@@ -366,7 +359,7 @@ export function continuationLines(
   if (valueItems.length === 0) return [];
   const midX = pageWidth / 2;
   const valueLeftEdge = Math.min(...valueItems.map((v) => v.x)) - 4;
-  const colEnd = column === 'left' ? midX - 4 : pageWidth - 8;
+  const colEnd = column === "left" ? midX - 4 : pageWidth - 8;
   const collected: TextRun[] = [];
   let lastY = labelLine.y;
   let count = 0;
@@ -399,11 +392,11 @@ export function locateLabelValue(
   const found = finder(
     layout,
     label,
-    options.column ?? 'any',
+    options.column ?? "any",
     options.occurrence ?? 0,
   );
   if (!found) return null;
-  const column = options.column ?? 'any';
+  const column = options.column ?? "any";
   const values = valueItemsAfter(
     found.line,
     found.labelItem,

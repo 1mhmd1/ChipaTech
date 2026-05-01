@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { PageBody, PageHeader } from '../../components/layout/PageHeader';
-import { Card } from '../../components/ui/Card';
-import { Field, Input, LockedField, Textarea } from '../../components/ui/Field';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { PageBody, PageHeader } from "../../components/layout/PageHeader";
+import { Card } from "../../components/ui/Card";
+import { Field, Input, LockedField, Textarea } from "../../components/ui/Field";
 import {
   banksDB,
   clientsDB,
@@ -13,22 +13,22 @@ import {
   nowIso,
   tradesDB,
   uid,
-} from '../../lib/storage/db';
+} from "../../lib/storage/db";
 import {
   downloadPdf,
   generateMirroredContract,
   type MirrorPayload,
-} from '../../lib/pdf/generator';
-import { loadDocumentBlob, saveDocumentBlob } from '../../lib/storage/files';
-import { computeFinancials } from '../../lib/finance';
-import { formatMoney, formatTons, formatUSD } from '../../lib/format';
-import { useAppStore } from '../../store/appStore';
-import { WarningsList } from '../../components/trade/Warnings';
-import { buildWarnings } from '../../components/trade/warnings-helpers';
-import { sendContract } from '../../lib/email';
-import { Badge } from '../../components/ui/Badge';
-import { Spinner } from '../../components/ui/Spinner';
-import type { Trade } from '../../types';
+} from "../../lib/pdf/generator";
+import { loadDocumentBlob, saveDocumentBlob } from "../../lib/storage/files";
+import { computeFinancials } from "../../lib/finance";
+import { formatMoney, formatTons, formatUSD } from "../../lib/format";
+import { useAppStore } from "../../store/appStore";
+import { WarningsList } from "../../components/trade/Warnings";
+import { buildWarnings } from "../../components/trade/warnings-helpers";
+import { sendContract } from "../../lib/email";
+import { Badge } from "../../components/ui/Badge";
+import { Spinner } from "../../components/ui/Spinner";
+import type { Trade } from "../../types";
 
 export function ContractEditorPage() {
   const { id } = useParams();
@@ -65,11 +65,11 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
   const client = clients.find((c) => c.id === clientId);
   const contact = contacts.find((c) => c.id === contactId);
 
-  const [exporterName, setExporterName] = useState(entity?.name ?? '');
-  const [exporterRUC, setExporterRUC] = useState(entity?.ruc_ein ?? '');
-  const [exporterAddress, setExporterAddress] = useState(entity?.address ?? '');
-  const [exporterCity, setExporterCity] = useState(entity?.city ?? '');
-  const [exporterCountry, setExporterCountry] = useState(entity?.country ?? '');
+  const [exporterName, setExporterName] = useState(entity?.name ?? "");
+  const [exporterRUC, setExporterRUC] = useState(entity?.ruc_ein ?? "");
+  const [exporterAddress, setExporterAddress] = useState(entity?.address ?? "");
+  const [exporterCity, setExporterCity] = useState(entity?.city ?? "");
+  const [exporterCountry, setExporterCountry] = useState(entity?.country ?? "");
 
   useEffect(() => {
     if (!entity) return;
@@ -82,10 +82,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
     if (def) setBankProfileId(def.id);
   }, [entityId]);
 
-  const [clientName, setClientName] = useState(client?.company_name ?? '');
-  const [clientAddress, setClientAddress] = useState(client?.address ?? '');
-  const [clientCity, setClientCity] = useState(client?.city ?? '');
-  const [clientCountry, setClientCountry] = useState(client?.country ?? '');
+  const [clientName, setClientName] = useState(client?.company_name ?? "");
+  const [clientAddress, setClientAddress] = useState(client?.address ?? "");
+  const [clientCity, setClientCity] = useState(client?.city ?? "");
+  const [clientCountry, setClientCountry] = useState(client?.country ?? "");
   useEffect(() => {
     if (!client) return;
     setClientName(client.company_name);
@@ -94,9 +94,9 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
     setClientCountry(client.country);
   }, [clientId]);
 
-  const [contactName, setContactName] = useState(contact?.full_name ?? '');
-  const [contactPhone, setContactPhone] = useState(contact?.phone ?? '');
-  const [contactEmail, setContactEmail] = useState(contact?.email ?? '');
+  const [contactName, setContactName] = useState(contact?.full_name ?? "");
+  const [contactPhone, setContactPhone] = useState(contact?.phone ?? "");
+  const [contactEmail, setContactEmail] = useState(contact?.email ?? "");
   useEffect(() => {
     if (!contact) return;
     setContactName(contact.full_name);
@@ -106,24 +106,24 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
 
   // Bank fields (editable per-contract overrides)
   const [bankFields, setBankFields] = useState({
-    intermediaryName: bank?.intermediary_bank_name ?? '',
-    intermediarySwift: bank?.intermediary_bank_swift ?? '',
-    intermediaryAccountNumber: bank?.intermediary_account_number ?? '',
-    intermediaryLocation: bank?.intermediary_location ?? '',
-    araNumber: bank?.ara_number ?? '',
-    localBankName: bank?.bank_name ?? '',
-    localBankSwift: bank?.bank_swift ?? '',
-    accountNumber: bank?.account_number ?? '',
-    beneficiary: bank?.beneficiary_name ?? '',
+    intermediaryName: bank?.intermediary_bank_name ?? "",
+    intermediarySwift: bank?.intermediary_bank_swift ?? "",
+    intermediaryAccountNumber: bank?.intermediary_account_number ?? "",
+    intermediaryLocation: bank?.intermediary_location ?? "",
+    araNumber: bank?.ara_number ?? "",
+    localBankName: bank?.bank_name ?? "",
+    localBankSwift: bank?.bank_swift ?? "",
+    accountNumber: bank?.account_number ?? "",
+    beneficiary: bank?.beneficiary_name ?? "",
   });
   useEffect(() => {
     if (!bank) return;
     setBankFields({
       intermediaryName: bank.intermediary_bank_name,
       intermediarySwift: bank.intermediary_bank_swift,
-      intermediaryAccountNumber: bank.intermediary_account_number ?? '',
-      intermediaryLocation: bank.intermediary_location ?? '',
-      araNumber: bank.ara_number ?? '',
+      intermediaryAccountNumber: bank.intermediary_account_number ?? "",
+      intermediaryLocation: bank.intermediary_location ?? "",
+      araNumber: bank.ara_number ?? "",
       localBankName: bank.bank_name,
       localBankSwift: bank.bank_swift,
       accountNumber: bank.account_number,
@@ -135,9 +135,7 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
   const [saleUnitPrice, setSaleUnitPrice] = useState(
     trade.sale_unit_price || trade.frigo_unit_price,
   );
-  const [frigoUnitPrice, setFrigoUnitPrice] = useState(
-    trade.frigo_unit_price,
-  );
+  const [frigoUnitPrice, setFrigoUnitPrice] = useState(trade.frigo_unit_price);
   const frigoTotal = frigoUnitPrice * trade.quantity_tons;
   const [shippingCost, setShippingCost] = useState(trade.shipping_cost ?? 0);
   const [insuranceCost, setInsuranceCost] = useState(trade.insurance_cost ?? 0);
@@ -157,7 +155,7 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
   });
 
   const advanceDueDate = useMemo(() => {
-    if (!signingDate) return '';
+    if (!signingDate) return "";
     const d = new Date(signingDate);
     d.setDate(d.getDate() + 7);
     return d.toISOString().slice(0, 10);
@@ -187,9 +185,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
   // contract is generated and saved we immediately invoke the
   // send-contract Edge Function with sensible defaults.
   const [autoEmail, setAutoEmail] = useState(false);
-  const [autoEmailStatus, setAutoEmailStatus] = useState<
-    null | { ok: boolean; message: string }
-  >(null);
+  const [autoEmailStatus, setAutoEmailStatus] = useState<null | {
+    ok: boolean;
+    message: string;
+  }>(null);
 
   // ----- source PDF presence + re-upload recovery -----
   // The supplier PDF gets attached at trade-creation. If it was never
@@ -200,7 +199,7 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
   const [sourceVersion, setSourceVersion] = useState(0);
   const sourceMissing = useMemo(() => {
     const docs = docsDB.byTrade(trade.id);
-    return !docs.some((d) => d.document_type === 'frigo_contract');
+    return !docs.some((d) => d.document_type === "frigo_contract");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trade.id, sourceVersion]);
   const [reuploading, setReuploading] = useState(false);
@@ -210,20 +209,20 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
   const onReuploadSource = async (file: File) => {
     if (!user) return;
     setReuploading(true);
-  setReuploadError(null);
+    setReuploadError(null);
     try {
       const ab = await file.arrayBuffer();
       const bytes = new Uint8Array(ab);
       const storagePath = await saveDocumentBlob(
         trade.id,
-        'frigo_contract',
+        "frigo_contract",
         bytes,
         file.name,
       );
       docsDB.insert({
-        id: uid('doc'),
+        id: uid("doc"),
         trade_id: trade.id,
-        document_type: 'frigo_contract',
+        document_type: "frigo_contract",
         file_name: file.name,
         storage_path: storagePath,
         uploaded_by: user.id,
@@ -231,18 +230,18 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
       });
       logActivity(
         trade.id,
-        'document_uploaded',
+        "document_uploaded",
         `Supplier PDF re-uploaded: ${file.name}`,
         undefined,
         user.id,
       );
       setSourceVersion((v) => v + 1);
     } catch (err) {
-      const msg = (err as Error).message ?? '';
+      const msg = (err as Error).message ?? "";
       setReuploadError(
         /quota/i.test(msg) || /exceeded/i.test(msg)
-          ? 'Browser storage is full — clear demo data or configure Supabase to store large PDFs in the cloud.'
-          : msg || 'Could not save the file.',
+          ? "Browser storage is full — clear demo data or configure Supabase to store large PDFs in the cloud."
+          : msg || "Could not save the file.",
       );
       // force a re-render so the error surfaces
       setSourceVersion((v) => v + 1);
@@ -297,7 +296,7 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
 
   const fetchSourcePdf = async (): Promise<ArrayBuffer | null> => {
     const docs = docsDB.byTrade(trade.id);
-    const source = docs.find((d) => d.document_type === 'frigo_contract');
+    const source = docs.find((d) => d.document_type === "frigo_contract");
     if (!source) return null;
     const bytes = await loadDocumentBlob(source.storage_path);
     const copy = new ArrayBuffer(bytes.byteLength);
@@ -349,48 +348,46 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
       const fileName = `${trade.trade_reference}-sales-contract.pdf`;
       const storagePath = await saveDocumentBlob(
         trade.id,
-        'sales_contract',
+        "sales_contract",
         out,
         fileName,
       );
-      const docId = uid('doc');
+      const docId = uid("doc");
       docsDB.insert({
         id: docId,
         trade_id: trade.id,
-        document_type: 'sales_contract',
+        document_type: "sales_contract",
         file_name: fileName,
         storage_path: storagePath,
-        uploaded_by: user?.id ?? 'system',
+        uploaded_by: user?.id ?? "system",
         uploaded_at: nowIso(),
       });
 
       logActivity(
         trade.id,
-        'contract_generated',
+        "contract_generated",
         `Mirrored sales contract generated (${formatUSD(fin.sale_total)} sale, ${formatUSD(fin.net_profit)} net)`,
         undefined,
         user?.id,
       );
 
       // Move trade to "active"
-      tradesDB.update(trade.id, { trade_status: 'active' });
+      tradesDB.update(trade.id, { trade_status: "active" });
 
       // Trigger download
-      await downloadPdf(
-        out,
-        `${trade.trade_reference}-sales-contract.pdf`,
-      );
+      await downloadPdf(out, `${trade.trade_reference}-sales-contract.pdf`);
 
       // Auto-email on Generate — fire it AFTER the doc is saved so the
       // Edge Function can read it from Supabase Storage.
       if (autoEmail) {
-        const recipients = [contactEmail, client?.contact_email]
-          .filter((e): e is string => Boolean(e && /.+@.+\..+/.test(e)));
+        const recipients = [contactEmail, client?.contact_email].filter(
+          (e): e is string => Boolean(e && /.+@.+\..+/.test(e)),
+        );
         if (recipients.length === 0) {
           setAutoEmailStatus({
             ok: false,
             message:
-              'Auto-email skipped: no valid recipient (set Client contact email).',
+              "Auto-email skipped: no valid recipient (set Client contact email).",
           });
         } else {
           // Storage may need a beat to confirm the upload before the
@@ -403,7 +400,7 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
               cc: recipients.slice(1),
               subject: `Sales contract ${trade.trade_reference} — ${exporterName}`,
               message:
-                `Dear ${(client?.contact_name ?? clientName.split(' ')[0]) || 'Partner'},\n\n` +
+                `Dear ${(client?.contact_name ?? clientName.split(" ")[0]) || "Partner"},\n\n` +
                 `Please find attached our sales contract ${trade.trade_reference} for your review and signature.\n\n` +
                 `Best regards,\n${exporterName}`,
               attachmentDocumentIds: [docId],
@@ -420,7 +417,7 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
           } else {
             setAutoEmailStatus({
               ok: false,
-              message: `Auto-email failed: ${result.error ?? 'unknown error'}. The contract is still saved.`,
+              message: `Auto-email failed: ${result.error ?? "unknown error"}. The contract is still saved.`,
             });
           }
         }
@@ -444,13 +441,19 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
         description={`${trade.trade_reference} · ${trade.product_description.slice(0, 60)}…`}
         breadcrumb={
           <span>
-            <button onClick={() => navigate('/trades')} className="hover:text-ink-700">
+            <button
+              onClick={() => navigate("/trades")}
+              className="hover:text-ink-700"
+            >
               Trades
-            </button>{' '}
-            /{' '}
-            <button onClick={() => navigate(`/trades/${trade.id}`)} className="hover:text-ink-700">
+            </button>{" "}
+            /{" "}
+            <button
+              onClick={() => navigate(`/trades/${trade.id}`)}
+              className="hover:text-ink-700"
+            >
               {trade.trade_reference}
-            </button>{' '}
+            </button>{" "}
             / Editor
           </span>
         }
@@ -468,9 +471,18 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
               className="btn-secondary"
               title="Save edits and open the printable contract — use the browser's Save as PDF from there."
             >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M6 9V2h12v7" strokeLinejoin="round" />
-                <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" strokeLinejoin="round" />
+                <path
+                  d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"
+                  strokeLinejoin="round"
+                />
                 <rect x="6" y="14" width="12" height="8" rx="1" />
               </svg>
               Preview & Print
@@ -485,8 +497,17 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                 onChange={(e) => setAutoEmail(e.target.checked)}
                 className="cursor-pointer"
               />
-              <svg viewBox="0 0 24 24" className="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" strokeLinejoin="round" />
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 text-brand-600"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+                  strokeLinejoin="round"
+                />
               </svg>
               Auto-email
             </label>
@@ -500,15 +521,25 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
               {generating ? (
                 <>
                   <Spinner />
-                  {autoEmail ? 'Generating & sending…' : 'Generating…'}
+                  {autoEmail ? "Generating & sending…" : "Generating…"}
                 </>
               ) : (
                 <>
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 3v12m0 0l-4-4m4 4l4-4" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      d="M12 3v12m0 0l-4-4m4 4l4-4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                     <path d="M5 21h14" strokeLinecap="round" />
                   </svg>
-                  {autoEmail ? 'Generate & send' : 'Generate & download'}
+                  {autoEmail ? "Generate & send" : "Generate & download"}
                 </>
               )}
             </button>
@@ -518,10 +549,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
       {autoEmailStatus && (
         <div
           className={
-            'mx-8 mt-4 rounded-lg border px-4 py-3 text-sm ' +
+            "mx-8 mt-4 rounded-lg border px-4 py-3 text-sm " +
             (autoEmailStatus.ok
-              ? 'border-success-200 bg-success-50 text-success-700'
-              : 'border-warning-200 bg-warning-50 text-warning-700')
+              ? "border-success-200 bg-success-50 text-success-700"
+              : "border-warning-200 bg-warning-50 text-warning-700")
           }
         >
           {autoEmailStatus.message}
@@ -532,9 +563,22 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
           <div className="mb-6 relative overflow-hidden rounded-xl border border-warning-200/80 bg-gradient-to-br from-warning-50/70 to-white p-5 shadow-soft">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-100 text-warning-700 ring-4 ring-warning-50">
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 3H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V7l-4-4z" strokeLinejoin="round" />
-                  <path d="M14 3v4h4M12 11v6M9 14l3-3 3 3" strokeLinecap="round" strokeLinejoin="round" />
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    d="M14 3H8a2 2 0 00-2 2v14a2 2 0 002 2h8a2 2 0 002-2V7l-4-4z"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M14 3v4h4M12 11v6M9 14l3-3 3 3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
@@ -542,14 +586,13 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                   Supplier PDF is missing for this trade
                 </div>
                 <p className="mt-1 text-sm text-warning-700/80 leading-relaxed">
-                  We can't find the original Frigorífico Concepción contract
-                  for{' '}
+                  We can't find the original Frigorífico Concepción contract for{" "}
                   <span className="font-mono font-semibold">
                     {trade.trade_reference}
                   </span>
-                  . Most likely the upload didn't finish (browser storage
-                  limit, network drop, or this trade was duplicated from
-                  one missing the file). Re-attach it below to continue.
+                  . Most likely the upload didn't finish (browser storage limit,
+                  network drop, or this trade was duplicated from one missing
+                  the file). Re-attach it below to continue.
                 </p>
                 {reuploadError && (
                   <div className="mt-2 text-xs text-danger-700">
@@ -567,7 +610,7 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                     onChange={async (e) => {
                       const f = e.target.files?.[0];
                       if (f) await onReuploadSource(f);
-                      e.currentTarget.value = '';
+                      e.currentTarget.value = "";
                     }}
                   />
                   <button
@@ -583,8 +626,18 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                       </>
                     ) : (
                       <>
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path
+                            d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                         Re-upload supplier PDF
                       </>
@@ -601,7 +654,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
           {/* ----- Left: editable form ----- */}
           <div className="space-y-6 min-w-0">
-            <Section title="Acting Entity" subtitle="Replaces the supplier identity on the contract">
+            <Section
+              title="Acting Entity"
+              subtitle="Replaces the supplier identity on the contract"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Entity">
                   <select
@@ -664,7 +720,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
               </div>
             </Section>
 
-            <Section title="Buyer (Client)" subtitle="Auto-mirrors into the Payer block">
+            <Section
+              title="Buyer (Client)"
+              subtitle="Auto-mirrors into the Payer block"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Saved client" className="sm:col-span-2">
                   <select
@@ -706,7 +765,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
               </div>
             </Section>
 
-            <Section title="Contact Person" subtitle="Replaces Frigo's sales contact">
+            <Section
+              title="Contact Person"
+              subtitle="Replaces Frigo's sales contact"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Saved contact" className="sm:col-span-2">
                   <select
@@ -759,7 +821,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                 <LockedField label="Validity" value={trade.validity} />
                 <LockedField label="Temperature" value={trade.temperature} />
                 <LockedField label="Packing" value={trade.packing} />
-                <LockedField label="Shipment date" value={trade.shipment_date} />
+                <LockedField
+                  label="Shipment date"
+                  value={trade.shipment_date}
+                />
                 <LockedField label="Origin" value={trade.origin} />
                 <LockedField label="Destination" value={trade.destination} />
                 <LockedField label="Incoterm" value={trade.incoterm} />
@@ -771,7 +836,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
               </div>
             </Section>
 
-            <Section title="Pricing & costs" subtitle="Drives all financial calculations">
+            <Section
+              title="Pricing & costs"
+              subtitle="Drives all financial calculations"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Sale unit price (USD / ton)" required>
                   <Input
@@ -876,7 +944,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                   <Input
                     value={bankFields.beneficiary}
                     onChange={(e) =>
-                      setBankFields((b) => ({ ...b, beneficiary: e.target.value }))
+                      setBankFields((b) => ({
+                        ...b,
+                        beneficiary: e.target.value,
+                      }))
                     }
                   />
                 </Field>
@@ -917,7 +988,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                   <Input
                     value={bankFields.araNumber}
                     onChange={(e) =>
-                      setBankFields((b) => ({ ...b, araNumber: e.target.value }))
+                      setBankFields((b) => ({
+                        ...b,
+                        araNumber: e.target.value,
+                      }))
                     }
                   />
                 </Field>
@@ -975,8 +1049,8 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
             <Card
               className={
                 fin.net_profit >= 0
-                  ? 'bg-gradient-to-br from-success-50 to-white border-success-200'
-                  : 'bg-gradient-to-br from-danger-50 to-white border-danger-200'
+                  ? "bg-gradient-to-br from-success-50 to-white border-success-200"
+                  : "bg-gradient-to-br from-danger-50 to-white border-danger-200"
               }
             >
               <div className="flex items-start justify-between">
@@ -988,8 +1062,8 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                     {trade.trade_reference}
                   </div>
                 </div>
-                <Badge tone={fin.net_profit >= 0 ? 'success' : 'danger'}>
-                  {fin.net_profit >= 0 ? 'Profitable' : 'Loss'}
+                <Badge tone={fin.net_profit >= 0 ? "success" : "danger"}>
+                  {fin.net_profit >= 0 ? "Profitable" : "Loss"}
                 </Badge>
               </div>
               <div className="mt-3">
@@ -998,20 +1072,18 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                 </div>
                 <div
                   className={`text-3xl font-bold tabular-nums ${
-                    fin.net_profit >= 0
-                      ? 'text-success-700'
-                      : 'text-danger-600'
+                    fin.net_profit >= 0 ? "text-success-700" : "text-danger-600"
                   }`}
                 >
                   {formatUSD(fin.net_profit)}
                 </div>
                 <div className="text-xs text-ink-500 mt-0.5">
-                  Margin{' '}
+                  Margin{" "}
                   <span
-                    className={`font-semibold ${fin.margin_pct < 5 ? 'text-warning-700' : 'text-ink-700'}`}
+                    className={`font-semibold ${fin.margin_pct < 5 ? "text-warning-700" : "text-ink-700"}`}
                   >
                     {fin.margin_pct.toFixed(1)}%
-                  </span>{' '}
+                  </span>{" "}
                   · Sale {formatUSD(fin.sale_total)}
                 </div>
               </div>
@@ -1020,9 +1092,22 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
             {/* ===== Smart checks ===== */}
             <Card>
               <h3 className="text-sm font-semibold text-ink-900 mb-3 flex items-center gap-2">
-                <svg viewBox="0 0 24 24" className="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L4 6v6c0 5 4 9 8 10 4-1 8-5 8-10V6z" strokeLinejoin="round" />
-                  <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    d="M12 2L4 6v6c0 5 4 9 8 10 4-1 8-5 8-10V6z"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9 12l2 2 4-4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
                 Smart checks
               </h3>
@@ -1045,7 +1130,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                 Financial preview
               </h3>
               <div className="mt-3 space-y-2 text-sm">
-                <Row label="Sale unit price" value={`$${saleUnitPrice.toFixed(2)}/t`} />
+                <Row
+                  label="Sale unit price"
+                  value={`$${saleUnitPrice.toFixed(2)}/t`}
+                />
                 <Row
                   label="Sale total"
                   value={formatUSD(fin.sale_total)}
@@ -1065,7 +1153,7 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
                 <Row
                   label="Net profit"
                   value={formatUSD(fin.net_profit)}
-                  highlight={fin.net_profit >= 0 ? 'success' : 'danger'}
+                  highlight={fin.net_profit >= 0 ? "success" : "danger"}
                 />
                 <Row
                   label="Margin"
@@ -1109,8 +1197,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
               </h3>
               <ul className="mt-3 space-y-1.5 text-xs text-ink-600">
                 <li className="flex items-start gap-1.5">
-                  <Check /> Exporter replaced with{' '}
-                  <span className="font-medium">{exporterName.split(' ')[0]}</span>
+                  <Check /> Exporter replaced with{" "}
+                  <span className="font-medium">
+                    {exporterName.split(" ")[0]}
+                  </span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <Check /> Banking section overlaid
@@ -1128,16 +1218,15 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
             </Card>
           </aside>
         </div>
-
       </PageBody>
     </>
   );
 }
 
 function formatDateShort(iso: string): string {
-  if (!iso) return '—';
+  if (!iso) return "—";
   const d = new Date(iso);
-  return `${d.toLocaleString('en-US', { month: 'short' }).toLowerCase()}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
+  return `${d.toLocaleString("en-US", { month: "short" }).toLowerCase()}/${d.getDate().toString().padStart(2, "0")}/${d.getFullYear()}`;
 }
 
 function Section({
@@ -1153,9 +1242,7 @@ function Section({
     <Card>
       <header className="mb-4">
         <h2 className="text-base font-semibold text-ink-900">{title}</h2>
-        {subtitle && (
-          <p className="text-xs text-ink-500 mt-0.5">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-xs text-ink-500 mt-0.5">{subtitle}</p>}
       </header>
       {children}
     </Card>
@@ -1173,20 +1260,20 @@ function Row({
   value: React.ReactNode;
   muted?: boolean;
   bold?: boolean;
-  highlight?: 'success' | 'danger';
+  highlight?: "success" | "danger";
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={muted ? 'text-ink-500' : 'text-ink-700'}>{label}</span>
+      <span className={muted ? "text-ink-500" : "text-ink-700"}>{label}</span>
       <span
         className={`tabular-nums ${
-          highlight === 'success'
-            ? 'text-success-700 font-semibold'
-            : highlight === 'danger'
-              ? 'text-danger-600 font-semibold'
+          highlight === "success"
+            ? "text-success-700 font-semibold"
+            : highlight === "danger"
+              ? "text-danger-600 font-semibold"
               : bold
-                ? 'font-semibold text-ink-900'
-                : 'text-ink-700'
+                ? "font-semibold text-ink-900"
+                : "text-ink-700"
         }`}
       >
         {value}
@@ -1197,9 +1284,14 @@ function Row({
 
 function Check() {
   return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 mt-0.5 shrink-0 text-success-600" fill="none" stroke="currentColor" strokeWidth="3">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5 mt-0.5 shrink-0 text-success-600"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+    >
       <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
-
