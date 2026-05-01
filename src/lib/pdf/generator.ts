@@ -731,8 +731,27 @@ export function bytesToBlobUrl(bytes: Uint8Array, type = 'application/pdf') {
   return URL.createObjectURL(blob);
 }
 
+async function readWithFileReader(file: File): Promise<ArrayBuffer> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const result = reader.result;
+      if (result instanceof ArrayBuffer) resolve(result);
+      else reject(new Error('FileReader returned non-ArrayBuffer result'));
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
 export async function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
-  return await file.arrayBuffer();
+  try {
+    const ab = await file.arrayBuffer();
+    if (ab.byteLength > 0) return ab;
+  } catch {
+    // fall through to FileReader
+  }
+  return await readWithFileReader(file);
 }
 
 export function bytesToBase64(bytes: Uint8Array): string {
