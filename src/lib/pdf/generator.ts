@@ -731,6 +731,56 @@ export function bytesToBlobUrl(bytes: Uint8Array, type = 'application/pdf') {
   return URL.createObjectURL(blob);
 }
 
+export async function downloadPdf(
+  bytes: Uint8Array,
+  fileName: string,
+): Promise<void> {
+  const buf = new Uint8Array(bytes.byteLength);
+  buf.set(bytes);
+  const blob = new Blob([buf], { type: 'application/pdf' });
+  const nav = typeof navigator !== 'undefined' ? navigator : undefined;
+
+  if (nav && 'share' in nav && 'canShare' in nav) {
+    try {
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      if ((nav as Navigator).canShare?.({ files: [file] })) {
+        await (nav as Navigator).share({ files: [file], title: fileName });
+        return;
+      }
+    } catch {
+      // fall through to download/open
+    }
+  }
+
+  const canCreateObjectUrl = typeof URL !== 'undefined' && URL.createObjectURL;
+  if (canCreateObjectUrl) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    if (typeof a.click === 'function') {
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      window.open(url, '_blank');
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === 'string') window.open(result, '_blank');
+      resolve();
+    };
+    reader.onerror = () => resolve();
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function readWithFileReader(file: File): Promise<ArrayBuffer> {
   return await new Promise((resolve, reject) => {
     const reader = new FileReader();

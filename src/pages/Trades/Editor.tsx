@@ -15,7 +15,7 @@ import {
   uid,
 } from '../../lib/storage/db';
 import {
-  bytesToBlobUrl,
+  downloadPdf,
   generateMirroredContract,
   type MirrorPayload,
 } from '../../lib/pdf/generator';
@@ -376,13 +376,10 @@ function ContractEditorInner({ trade }: { trade: Trade }) {
       tradesDB.update(trade.id, { trade_status: 'active' });
 
       // Trigger download
-      const url = bytesToBlobUrl(out);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${trade.trade_reference}-sales-contract.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await downloadPdf(
+        out,
+        `${trade.trade_reference}-sales-contract.pdf`,
+      );
 
       // Auto-email on Generate — fire it AFTER the doc is saved so the
       // Edge Function can read it from Supabase Storage.
