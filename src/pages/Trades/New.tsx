@@ -65,6 +65,60 @@ export function NewTradePage() {
   >(null);
   const [showCreateClient, setShowCreateClient] = useState(false);
 
+  const emptyParsedContract = (): ParsedContract => ({
+    contractRef: '',
+    exporterName: '',
+    exporterRUC: '',
+    exporterAddress: '',
+    exporterCity: '',
+    exporterCountry: '',
+    salesPerson: '',
+    salesAssistant: '',
+    dateOfIssue: '',
+    exporterEmail: '',
+    clientName: '',
+    clientAddress: '',
+    clientCity: '',
+    clientCountry: '',
+    contactPerson: '',
+    contactPhone: '',
+    contactEmail: '',
+    payerName: '',
+    payerCountry: '',
+    payerCompanyCountry: '',
+    quantity: 0,
+    productDescription: '',
+    unitPrice: 0,
+    totalAmount: 0,
+    brand: '',
+    validity: '',
+    temperature: '',
+    packing: '',
+    shipmentDate: '',
+    origin: '',
+    destination: '',
+    incoterm: '',
+    plantNo: '',
+    freightCondition: '',
+    freightCost: 0,
+    insuranceCost: 0,
+    prepaymentCondition: '',
+    balanceCondition: '',
+    observations: '',
+    lawAndJurisdiction: '',
+    requiresInspection: '',
+    beneficiaryName: '',
+    beneficiaryAddress: '',
+    intermediaryBank: '',
+    intermediarySwift: '',
+    intermediaryAccountNumber: '',
+    intermediaryLocation: '',
+    bankParaguay: '',
+    bankSwift: '',
+    accountNumber: '',
+    araNumber: '',
+  });
+
   // When entity changes, default the bank profile
   useEffect(() => {
     if (!entityId) return;
@@ -119,8 +173,11 @@ export function NewTradePage() {
       setStep('select');
     } catch (e) {
       console.error(e);
+      setParsed(emptyParsedContract());
+      setAutoMatch(null);
+      setStep('select');
       setParseError(
-        'Could not parse this PDF. Make sure it is a digitally generated supplier contract (not a scan).',
+        'Could not parse this PDF on this device. You can continue and fill the fields manually in the next step.',
       );
     } finally {
       setParsing(false);
