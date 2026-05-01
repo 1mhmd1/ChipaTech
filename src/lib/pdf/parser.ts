@@ -8,13 +8,41 @@
 
 import type { ParsedContract } from '../../types';
 
+let pdfjsWorkerReady = true;
+
 // Lazy-load pdfjs to keep the initial bundle slim
 async function loadPdfjs() {
   const pdfjsLib = await import('pdfjs-dist');
   // Use the legacy worker for compatibility
-  const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
+  try {
+    const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
+    pdfjsWorkerReady = true;
+  } catch (err) {
+    // Mobile browsers or CSP can block module workers.
+    // We'll fall back to main-thread parsing instead.
+    pdfjsWorkerReady = false;
+  }
   return pdfjsLib;
+}
+
+function isLikelyMobile(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+async function getPdfDocument(
+  pdfjs: typeof import('pdfjs-dist'),
+  data: ArrayBuffer,
+) {
+  try {
+    return await pdfjs.getDocument({
+      data,
+      disableWorker: isLikelyMobile() ? true : !pdfjsWorkerReady,
+    }).promise;
+  } catch (err) {
+    return await pdfjs.getDocument({ data, disableWorker: true }).promise;
+  }
 }
 
 // Group text items by line based on Y coordinate, then sort by X
@@ -25,7 +53,7 @@ interface LineItem {
 
 async function extractLines(file: ArrayBuffer): Promise<string[]> {
   const pdfjs = await loadPdfjs();
-  const doc = await pdfjs.getDocument({ data: file }).promise;
+  const doc = await getPdfDocument(pdfjs, file);
   const lines: string[] = [];
   for (let p = 1; p <= doc.numPages; p++) {
     const page = await doc.getPage(p);

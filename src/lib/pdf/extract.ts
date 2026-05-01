@@ -11,13 +11,40 @@
 // ============================================================
 
 let pdfjsCache: typeof import('pdfjs-dist') | null = null;
+let pdfjsWorkerReady = true;
 async function loadPdfjs() {
   if (pdfjsCache) return pdfjsCache;
   const pdfjsLib = await import('pdfjs-dist');
-  const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
+  try {
+    const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
+    pdfjsWorkerReady = true;
+  } catch (err) {
+    // Mobile browsers or CSP can block module workers.
+    // We'll fall back to main-thread parsing instead.
+    pdfjsWorkerReady = false;
+  }
   pdfjsCache = pdfjsLib;
   return pdfjsLib;
+}
+
+function isLikelyMobile(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+async function getPdfDocument(
+  pdfjs: typeof import('pdfjs-dist'),
+  data: ArrayBuffer,
+) {
+  try {
+    return await pdfjs.getDocument({
+      data,
+      disableWorker: isLikelyMobile() ? true : !pdfjsWorkerReady,
+    }).promise;
+  } catch (err) {
+    return await pdfjs.getDocument({ data, disableWorker: true }).promise;
+  }
 }
 
 // ---------- Types ----------
@@ -57,7 +84,7 @@ export async function extractLayout(
   const pdfjs = await loadPdfjs();
   // Clone bytes so pdfjs can't detach our caller's buffer
   const safe = bytes.slice(0);
-  const doc = await pdfjs.getDocument({ data: safe }).promise;
+  const doc = await getPdfDocument(pdfjs, safe);
   const page = await doc.getPage(1);
   const viewport = page.getViewport({ scale: 1 });
   const tc = await page.getTextContent();
