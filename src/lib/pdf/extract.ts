@@ -47,13 +47,19 @@ async function getPdfDocument(
     const params = {
       data,
       disableWorker: isLikelyMobile() ? true : !pdfjsWorkerReady,
+      isEvalSupported: false,
+      disableFontFace: true,
+      useSystemFonts: true,
     } as unknown as Record<string, unknown>;
     return await pdfjs.getDocument(params).promise;
   } catch {
-    const params = { data, disableWorker: true } as unknown as Record<
-      string,
-      unknown
-    >;
+    const params = {
+      data,
+      disableWorker: true,
+      isEvalSupported: false,
+      disableFontFace: true,
+      useSystemFonts: true,
+    } as unknown as Record<string, unknown>;
     return await pdfjs.getDocument(params).promise;
   }
 }

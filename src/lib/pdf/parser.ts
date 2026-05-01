@@ -44,13 +44,19 @@ async function getPdfDocument(
     const params = {
       data,
       disableWorker: isLikelyMobile() ? true : !pdfjsWorkerReady,
+      isEvalSupported: false,
+      disableFontFace: true,
+      useSystemFonts: true,
     } as unknown as Record<string, unknown>;
     return await pdfjs.getDocument(params).promise;
   } catch {
-    const params = { data, disableWorker: true } as unknown as Record<
-      string,
-      unknown
-    >;
+    const params = {
+      data,
+      disableWorker: true,
+      isEvalSupported: false,
+      disableFontFace: true,
+      useSystemFonts: true,
+    } as unknown as Record<string, unknown>;
     return await pdfjs.getDocument(params).promise;
   }
 }
@@ -65,9 +71,21 @@ async function extractLines(file: ArrayBuffer): Promise<string[]> {
   const pdfjs = await loadPdfjs();
   const doc = await getPdfDocument(pdfjs, file);
   const lines: string[] = [];
-  for (let p = 1; p <= doc.numPages; p++) {
+  const maxPages = isLikelyMobile() ? Math.min(1, doc.numPages) : doc.numPages;
+  for (let p = 1; p <= maxPages; p++) {
     const page = await doc.getPage(p);
-    const tc = await page.getTextContent();
+    const tcParams = { normalizeWhitespace: true } as unknown as Record<
+      string,
+      unknown
+    >;
+    let tc = await page.getTextContent(tcParams);
+    if (tc.items.length === 0) {
+      const retryParams = {
+        normalizeWhitespace: true,
+        disableCombineTextItems: true,
+      } as unknown as Record<string, unknown>;
+      tc = await page.getTextContent(retryParams);
+    }
 
     // Group into lines by Y coordinate (rounded to 2 px tolerance)
     const linesMap = new Map<number, LineItem>();

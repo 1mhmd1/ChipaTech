@@ -52,46 +52,53 @@ export function ContractHTML({
       <style>{`
         @page { size: A4; margin: 18mm 16mm; }
         .contract-doc {
-          font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-          color: #1d2230;
-          font-size: 11pt;
-          line-height: 1.45;
+          font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+          color: #111318;
+          font-size: 9.5pt;
+          line-height: 1.25;
           background: #ffffff;
-          padding: 16px 14px;
+          padding: 16px 12px;
           width: 210mm;
           max-width: 100%;
           min-height: auto;
           margin: 0 auto;
           box-sizing: border-box;
         }
-        .contract-doc h1 { font-size: 18pt; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
-        .contract-doc h2 { font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 8px; color: #0f1320; border-bottom: 1px solid #1d2230; padding-bottom: 4px; }
+        .contract-doc h1 { font-size: 16pt; font-weight: 700; letter-spacing: 0.01em; margin: 0; }
+        .contract-doc h2 { font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 6px; color: #111318; border-bottom: 1px solid #111318; padding-bottom: 3px; }
         .contract-doc table { width: 100%; border-collapse: collapse; }
-        .contract-doc th, .contract-doc td { padding: 8px 10px; vertical-align: top; }
+        .contract-doc th, .contract-doc td { padding: 6px 8px; vertical-align: top; }
         /* Mobile-default: stack 2-col grids */
-        .contract-doc .grid-2 { display: grid; grid-template-columns: 1fr; gap: 14px; }
-        .contract-doc .signatures { margin-top: 30px; display: grid; grid-template-columns: 1fr; gap: 24px; }
-        .contract-doc .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
-        .contract-doc .muted { color: #5e6577; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
-        .contract-doc .field { margin-bottom: 6px; }
-        .contract-doc .field-label { color: #5e6577; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 1px; }
-        .contract-doc .field-value { color: #1d2230; font-size: 10.5pt; word-wrap: break-word; }
-        .contract-doc .product-table { border-collapse: collapse; margin-top: 8px; }
-        .contract-doc .product-table th { background: #f7f8fa; border-bottom: 2px solid #1d2230; text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: #434a5c; }
-        .contract-doc .product-table td { border-bottom: 1px solid #e5e7ec; font-size: 10pt; word-wrap: break-word; }
-        .contract-doc .product-table tr.total td { font-weight: 700; border-bottom: 2px solid #1d2230; background: #f7f8fa; }
+        .contract-doc .grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .contract-doc .grid-2.split { border-top: 1px solid #111318; border-bottom: 1px solid #111318; padding: 8px 0; }
+        .contract-doc .grid-2.split > div { padding-right: 8px; }
+        .contract-doc .grid-2.split > div:last-child { padding-right: 0; }
+        .contract-doc .signatures { margin-top: 24px; display: grid; grid-template-columns: 1fr; gap: 18px; }
+        .contract-doc .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+        .contract-doc .muted { color: #343945; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+        .contract-doc .field { margin-bottom: 4px; }
+        .contract-doc .field-label { color: #343945; font-size: 7.6pt; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 1px; }
+        .contract-doc .field-value { color: #111318; font-size: 9pt; word-wrap: break-word; }
+        .contract-doc .product-table { border: 1px solid #111318; margin-top: 6px; }
+        .contract-doc .product-table th { border-bottom: 1px solid #111318; border-right: 1px solid #111318; text-align: left; font-size: 7.6pt; text-transform: uppercase; letter-spacing: 0.06em; color: #111318; }
+        .contract-doc .product-table td { border-bottom: 1px solid #111318; border-right: 1px solid #111318; font-size: 9pt; word-wrap: break-word; }
+        .contract-doc .product-table tr:last-child td { border-bottom: none; }
+        .contract-doc .product-table th:last-child,
+        .contract-doc .product-table td:last-child { border-right: none; }
+        .contract-doc .product-table tr.total td { font-weight: 700; }
         .contract-doc .num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-        .contract-doc section { margin-bottom: 18px; }
-        .contract-doc .sig-block { border-top: 1px solid #1d2230; padding-top: 6px; font-size: 9.5pt; }
-        .contract-doc .sig-block strong { font-size: 10.5pt; }
-        .contract-doc .ref-pill { display: inline-block; background: #0f1320; color: white; padding: 4px 10px; border-radius: 4px; font-size: 9.5pt; font-weight: 600; letter-spacing: 0.04em; }
-        .contract-doc .observations { white-space: pre-wrap; font-size: 10pt; word-wrap: break-word; }
+        .contract-doc section { margin-bottom: 14px; }
+        .contract-doc .sig-block { border-top: 1px solid #111318; padding-top: 6px; font-size: 8.5pt; }
+        .contract-doc .sig-block strong { font-size: 9.5pt; }
+        .contract-doc .ref-pill { display: inline-block; border: 1px solid #111318; padding: 3px 8px; font-size: 8.5pt; font-weight: 700; letter-spacing: 0.05em; }
+        .contract-doc .observations { white-space: pre-wrap; font-size: 9pt; word-wrap: break-word; border: 1px solid #111318; padding: 6px 8px; min-height: 22px; }
+        .contract-doc .section-box { border: 1px solid #111318; padding: 6px 8px; }
         /* Tablet+: restore the print-style two-column layout */
         @media (min-width: 640px) {
-          .contract-doc { padding: 28mm 22mm 24mm; min-height: 297mm; }
-          .contract-doc h1 { font-size: 20pt; }
-          .contract-doc .grid-2 { grid-template-columns: 1fr 1fr; gap: 18px; }
-          .contract-doc .signatures { grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 38px; }
+          .contract-doc { padding: 24mm 18mm 20mm; min-height: 297mm; }
+          .contract-doc h1 { font-size: 17pt; }
+          .contract-doc .grid-2 { grid-template-columns: 1fr 1fr; gap: 16px; }
+          .contract-doc .signatures { grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 30px; }
         }
         /* Print: force A4 dimensions regardless of viewport */
         @media print {
@@ -103,16 +110,16 @@ export function ContractHTML({
             width: 210mm !important;
             max-width: none !important;
             min-height: 297mm !important;
-            padding: 28mm 22mm 24mm !important;
+            padding: 24mm 18mm 20mm !important;
           }
-          .contract-doc h1 { font-size: 20pt !important; }
+          .contract-doc h1 { font-size: 17pt !important; }
           .contract-doc .grid-2 {
             grid-template-columns: 1fr 1fr !important;
-            gap: 18px !important;
+            gap: 16px !important;
           }
           .contract-doc .signatures {
             grid-template-columns: 1fr 1fr !important;
-            gap: 30px !important;
+            gap: 26px !important;
           }
         }
       `}</style>
@@ -123,27 +130,27 @@ export function ContractHTML({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-end',
-          paddingBottom: 14,
-          marginBottom: 18,
-          borderBottom: '2px solid #1d2230',
+          paddingBottom: 10,
+          marginBottom: 12,
+          borderBottom: '1px solid #111318',
         }}
       >
         <div>
           <h1>SALES CONTRACT</h1>
-          <div className="muted" style={{ marginTop: 4 }}>
+          <div className="muted" style={{ marginTop: 3 }}>
             Contrato de Venta Internacional
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div className="ref-pill">N° {trade.trade_reference}</div>
-          <div className="muted" style={{ marginTop: 6 }}>
+          <div className="muted" style={{ marginTop: 4 }}>
             Date · {formatDate(signingDate)}
           </div>
         </div>
       </header>
 
       {/* — parties — */}
-      <section className="grid-2">
+  <section className="grid-2 split">
         <div>
           <h2>Seller / Vendedor</h2>
           <div className="field">
@@ -313,13 +320,7 @@ export function ContractHTML({
       <section>
         <h2>Payment Terms / Términos de Pago</h2>
         <div className="grid-2" style={{ marginTop: 6 }}>
-          <div
-            style={{
-              border: '1px solid #e5e7ec',
-              borderRadius: 6,
-              padding: '10px 12px',
-            }}
-          >
+          <div className="section-box">
             <div className="field-label" style={{ marginBottom: 4 }}>
               50% Advance
             </div>
@@ -336,13 +337,7 @@ export function ContractHTML({
               {trade.prepayment_condition || `Due ${formatDate(trade.advance_due_date ?? signingDate)}`}
             </div>
           </div>
-          <div
-            style={{
-              border: '1px solid #e5e7ec',
-              borderRadius: 6,
-              padding: '10px 12px',
-            }}
-          >
+          <div className="section-box">
             <div className="field-label" style={{ marginBottom: 4 }}>
               50% Balance
             </div>
@@ -366,7 +361,7 @@ export function ContractHTML({
       <section>
         <h2>Bank Details / Datos Bancarios</h2>
         <div className="grid-2" style={{ marginTop: 6 }}>
-          <div>
+          <div className="section-box">
             <div className="field-label">Beneficiary</div>
             <div className="field-value">{bank.beneficiary_name}</div>
             {bank.beneficiary_address && (
@@ -393,7 +388,7 @@ export function ContractHTML({
               </div>
             )}
           </div>
-          <div>
+          <div className="section-box">
             {(bank.intermediary_bank_name || bank.intermediary_bank_swift) && (
               <>
                 <div className="field-label">Intermediary bank</div>
@@ -458,13 +453,13 @@ export function ContractHTML({
       {/* — footer — */}
       <footer
         style={{
-          marginTop: 28,
-          paddingTop: 8,
-          borderTop: '1px solid #e5e7ec',
-          fontSize: 8.5,
-          color: '#8a93a8',
+          marginTop: 22,
+          paddingTop: 6,
+          borderTop: '1px solid #111318',
+          fontSize: 8,
+          color: '#4b5160',
           textAlign: 'center',
-          letterSpacing: '0.03em',
+          letterSpacing: '0.04em',
         }}
       >
         Generated by TradeMirror OS · {entity.name} · {formatDate(signingDate)}
