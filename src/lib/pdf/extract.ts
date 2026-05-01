@@ -13,21 +13,26 @@
 let pdfjsCache: typeof import("pdfjs-dist") | null = null;
 let pdfjsWorkerReady = false;
 
+// Always use the legacy (ES5-compatible, core-js polyfilled) build.
+// The standard 'pdfjs-dist' build targets ES2025 / Node>=22 and uses
+// Array.prototype.at(), Object.hasOwn(), Promise.withResolvers() etc.
+// that are absent in iOS Safari <16, causing a runtime crash.
 async function loadPdfjs() {
   if (pdfjsCache) return pdfjsCache;
-  const pdfjsLib = await import("pdfjs-dist");
-  // Try to load the web worker for performance. If it fails (e.g. strict
-  // CSP, old WebView, iOS Safari limitations) we clear workerSrc so
-  // pdfjs falls back to main-thread parsing automatically.
-  try {
-    const worker = await import("pdfjs-dist/build/pdf.worker.mjs?url");
-    pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
-    pdfjsWorkerReady = true;
-  } catch {
-    // Browsers that block module workers (e.g. iOS WKWebView with strict CSP)
-    // will parse on the main thread — slower but fully functional.
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "";
-    pdfjsWorkerReady = false;
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  if (!pdfjsWorkerReady) {
+    try {
+      const worker = await import(
+        "pdfjs-dist/legacy/build/pdf.worker.mjs?url"
+      );
+      pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
+      pdfjsWorkerReady = true;
+    } catch {
+      // Worker URL resolution failed (CSP or older WebView).
+      // Empty string tells pdfjs to skip the worker and run inline.
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "";
+      pdfjsWorkerReady = false;
+    }
   }
   pdfjsCache = pdfjsLib;
   return pdfjsLib;
@@ -37,25 +42,23 @@ async function getPdfDocument(
   pdfjs: typeof import("pdfjs-dist"),
   data: ArrayBuffer,
 ) {
+  // pdfjs is most reliable when given a Uint8Array (typed array) rather
+  // than a raw ArrayBuffer — older WebViews and iOS Safari handle the
+  // TypedArray path more consistently.
+  const typed = new Uint8Array(data);
+  const makeParams = (disableWorker: boolean) =>
+    ({
+      data: typed,
+      disableWorker,
+      isEvalSupported: false,
+      disableFontFace: true,
+      useSystemFonts: true,
+    } as unknown as Record<string, unknown>);
   try {
-    const params = {
-      data,
-      disableWorker: !pdfjsWorkerReady,
-      isEvalSupported: false,
-      disableFontFace: true,
-      useSystemFonts: true,
-    } as unknown as Record<string, unknown>;
-    return await pdfjs.getDocument(params).promise;
+    return await pdfjs.getDocument(makeParams(!pdfjsWorkerReady)).promise;
   } catch {
-    // Last-resort retry: fully disable the worker (handles iOS WKWebView)
-    const params = {
-      data,
-      disableWorker: true,
-      isEvalSupported: false,
-      disableFontFace: true,
-      useSystemFonts: true,
-    } as unknown as Record<string, unknown>;
-    return await pdfjs.getDocument(params).promise;
+    // Last-resort retry with worker fully disabled (handles iOS WKWebView)
+    return await pdfjs.getDocument(makeParams(true)).promise;
   }
 }
 
