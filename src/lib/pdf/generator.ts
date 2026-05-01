@@ -735,68 +735,69 @@ export async function downloadPdf(
   bytes: Uint8Array,
   fileName: string,
 ): Promise<void> {
-  const buf = new Uint8Array(bytes.byteLength);
-  buf.set(bytes);
-  const blob = new Blob([buf], { type: 'application/pdf' });
-  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  try {
+    const buf = new Uint8Array(bytes.byteLength);
+    buf.set(bytes);
+    const blob = new Blob([buf], { type: 'application/pdf' });
 
-  // --- Primary path: object URL (works on all modern browsers incl. iOS Safari) ---
-  // On iOS, window.open() with a blob URL opens the PDF in a new tab
-  // where the user can tap "Open in…" / "Save to Files". This is the most
-  // reliable experience. On desktop we use a hidden <a download> instead.
-  const canCreateObjectUrl =
-    typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function';
+    // 1. Try Native Share first for mobile/iOS
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.share &&
+      navigator.canShare
+    ) {
+      try {
+        const file = new File([blob], fileName, { type: 'application/pdf' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: fileName,
+          });
+          return;
+        }
+      } catch (err) {
+        // user cancelled or share failed, proceed to fallback
+        console.warn('Share API failed, falling back:', err);
+      }
+    }
 
-  if (canCreateObjectUrl) {
-    const url = URL.createObjectURL(blob);
-    if (isIOS) {
-      // iOS Safari: open in new tab → user taps share icon → Save to Files
-      window.open(url, '_blank');
-    } else {
-      // Desktop / Android: trigger a direct download via hidden anchor
+    // 2. Try Object URL (Standard desktop/Android method)
+    if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-    }
-    // Revoke after a generous delay so the browser has time to read the blob
-    setTimeout(() => URL.revokeObjectURL(url), 30_000);
-    return;
-  }
 
-  // --- Secondary path: Web Share API (only reached in very old WebViews
-  // where createObjectURL is unavailable — practically never on modern iOS) ---
-  const nav = typeof navigator !== 'undefined' ? navigator : undefined;
-  if (
-    nav &&
-    typeof (nav as Navigator).share === 'function' &&
-    typeof (nav as Navigator).canShare === 'function'
-  ) {
-    try {
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-      if ((nav as Navigator).canShare({ files: [file] })) {
-        await (nav as Navigator).share({ files: [file], title: fileName });
-        return;
-      }
-    } catch {
-      // AbortError (user dismissed sheet) or NotAllowedError — fall through
+      setTimeout(() => {
+        try {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          // ignore cleanup errors
+        }
+      }, 1000);
+      return;
     }
-  }
 
-  // --- Last resort: data URL via FileReader (very old browsers) ---
-  await new Promise<void>((resolve) => {
+    // 3. Last Resort: Data URL via FileReader (very old browsers)
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result;
-      if (typeof result === 'string') window.open(result, '_blank');
-      resolve();
+      if (typeof result === 'string') {
+        const a = document.createElement('a');
+        a.href = result;
+        a.download = fileName;
+        a.click();
+      }
     };
-    reader.onerror = () => resolve();
     reader.readAsDataURL(blob);
-  });
+  } catch (error) {
+    console.error('Download failed:', error);
+    alert('An error occurred while downloading the PDF. Please try again.');
+  }
 }
 
 async function readWithFileReader(file: File): Promise<ArrayBuffer> {
