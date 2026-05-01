@@ -16,12 +16,6 @@
 // ============================================================
 
 let _pdfjs: typeof import("pdfjs-dist") | null = null;
-let _workerReady = false;
-
-function isIOS(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
 
 /**
  * Returns the shared pdfjs-dist legacy instance, initialised once.
@@ -35,21 +29,14 @@ export async function getPdfjsLib(): Promise<typeof import("pdfjs-dist")> {
   // The standard build targets Node ≥ 22 / ES2025 and crashes on iOS.
   const lib = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-  // On iOS, workers are often blocked by WKWebView CSP — skip them.
-  // On desktop we try the worker for performance and fall back silently.
-  if (!isIOS()) {
-    try {
-      const w = await import("pdfjs-dist/legacy/build/pdf.worker.mjs?url");
-      lib.GlobalWorkerOptions.workerSrc = w.default;
-      _workerReady = true;
-    } catch {
-      lib.GlobalWorkerOptions.workerSrc = "";
-      _workerReady = false;
-    }
-  } else {
-    // Explicitly clear workerSrc so pdfjs doesn't attempt a fetch.
-    lib.GlobalWorkerOptions.workerSrc = "";
-    _workerReady = false;
+  // In pdf.js v4/v5+, workerSrc MUST be specified regardless of disableWorker
+  try {
+    const w = await import("pdfjs-dist/legacy/build/pdf.worker.mjs?url");
+    lib.GlobalWorkerOptions.workerSrc = w.default;
+  } catch (e) {
+    console.warn("Failed to load pdf worker:", e);
+    // Fallback to CDN for the matching legacy version if bundling fails
+    lib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.7.284/pdf.worker.min.mjs"; 
   }
 
   _pdfjs = lib;
@@ -66,13 +53,14 @@ export async function getPdfjsLib(): Promise<typeof import("pdfjs-dist")> {
  */
 export function getDocumentParams(
   data: Uint8Array,
-  forceInline = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _forceInline = false,
 ): Record<string, unknown> {
-  const disableWorker = forceInline || !_workerReady || isIOS();
   return {
     data,
-    disableWorker,
     isEvalSupported: false,
+    useSystemFonts: true, // Prevents loading custom fonts which often crash iOS Safari
+    disableFontFace: true,
   };
 }
 
