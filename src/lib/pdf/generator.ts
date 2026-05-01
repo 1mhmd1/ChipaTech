@@ -739,8 +739,14 @@ export async function downloadPdf(
   buf.set(bytes);
   const blob = new Blob([buf], { type: 'application/pdf' });
   const nav = typeof navigator !== 'undefined' ? navigator : undefined;
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-  if (nav && 'share' in nav && 'canShare' in nav) {
+  if (
+    nav &&
+    typeof (nav as Navigator).share === 'function' &&
+    typeof (nav as Navigator).canShare === 'function'
+  ) {
     try {
       const file = new File([blob], fileName, { type: 'application/pdf' });
       if ((nav as Navigator).canShare?.({ files: [file] })) {
@@ -755,17 +761,23 @@ export async function downloadPdf(
   const canCreateObjectUrl = typeof URL !== 'undefined' && URL.createObjectURL;
   if (canCreateObjectUrl) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    if (typeof a.click === 'function') {
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } else {
+    if (isIOS) {
       window.open(url, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      if (typeof a.click === 'function') {
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        window.open(url, '_blank');
+      }
     }
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (typeof URL.revokeObjectURL === 'function') {
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
     return;
   }
 

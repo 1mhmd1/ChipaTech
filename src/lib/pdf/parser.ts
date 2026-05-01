@@ -71,6 +71,7 @@ async function extractLines(file: ArrayBuffer): Promise<string[]> {
   const pdfjs = await loadPdfjs();
   const doc = await getPdfDocument(pdfjs, file);
   const lines: string[] = [];
+  const rawItems: string[] = [];
   const maxPages = isLikelyMobile() ? Math.min(1, doc.numPages) : doc.numPages;
   for (let p = 1; p <= maxPages; p++) {
     const page = await doc.getPage(p);
@@ -91,10 +92,12 @@ async function extractLines(file: ArrayBuffer): Promise<string[]> {
     const linesMap = new Map<number, LineItem>();
     for (const item of tc.items as Array<{
       str: string;
-      transform: number[];
+      transform?: number[];
     }>) {
-      const x = item.transform[4];
-      const y = Math.round(item.transform[5]);
+      const text = item.str ?? '';
+      if (text.trim()) rawItems.push(text.trim());
+      const x = item.transform ? item.transform[4] : 0;
+      const y = item.transform ? Math.round(item.transform[5]) : 0;
       if (!linesMap.has(y)) linesMap.set(y, { y, segments: [] });
       linesMap.get(y)!.segments.push({ x, text: item.str });
     }
@@ -108,6 +111,9 @@ async function extractLines(file: ArrayBuffer): Promise<string[]> {
         .trim();
       if (text) lines.push(text);
     }
+  }
+  if (lines.length === 0 && rawItems.length > 0) {
+    lines.push(rawItems.join(' '));
   }
   return lines;
 }
@@ -235,14 +241,34 @@ export async function parseSupplierContract(
     }
   }
 
+  if (!quantity || !productDescription || !totalAmount) {
+    const rowMatch = text.match(
+  /([0-9.,]+)\s+([A-Z][A-Z\s,()/-]{8,})\s+([0-9.,]{4,})\s+([0-9.,]{4,})/,
+    );
+    if (rowMatch) {
+      quantity = quantity || parseNumber(rowMatch[1]);
+      productDescription = productDescription || rowMatch[2].trim();
+      unitPrice = unitPrice || parseNumber(rowMatch[3]);
+      totalAmount = totalAmount || parseNumber(rowMatch[4]);
+    }
+  }
+
   // Specs (left column)
   const brand = findAfter(lines, /^Brand\b\s*(.*)$/i);
   const validity = findAfter(lines, /^Validity\b\s*(.*)$/i);
   const temperature = findAfter(lines, /^Temperature\b\s*(.*)$/i);
   const packing = findAfter(lines, /^Packing\b\s*(.*)$/i);
   const shipmentDate = findAfter(lines, /^Shipment'?s?\s*Date\b\s*(.*)$/i);
-  const origin = findAfter(lines, /^Origin\b\s*(.*)$/i);
-  const destination = findAfter(lines, /^Destination\b\s*(.*)$/i);
+  let origin = findAfter(lines, /^Origin\b\s*(.*)$/i);
+  let destination = findAfter(lines, /^Destination\b\s*(.*)$/i);
+  if (!origin) {
+    const originMatch = text.match(/Origin\s*:?\s*([A-Z\s-]+?)(?=\s+Destination|\s+Incoterm|\n|$)/i);
+    if (originMatch) origin = originMatch[1].trim();
+  }
+  if (!destination) {
+    const destMatch = text.match(/Destination\s*:?\s*([A-Z\s-]+?)(?=\s+Incoterm|\s+Shipment|\n|$)/i);
+    if (destMatch) destination = destMatch[1].trim();
+  }
   const incoterm = findAfter(lines, /^Incoterm\s*:?\s*(.*)$/i);
   const plantNo = findAfter(lines, /^Plant\s*No\.?\s*:?\s*(.*)$/i);
   const freightCondition = findAfter(lines, /^Freight\s*Condition\b\s*(.*)$/i);
