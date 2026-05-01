@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { PageBody, PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
 import { Field, Input, Select } from '../components/ui/Field';
@@ -17,8 +17,8 @@ import { Spinner } from '../components/ui/Spinner';
 
 export function UsersPage() {
   const me = useAppStore((s) => s.user);
-  const [version, setVersion] = useState(0);
-  const users = useMemo(() => usersDB.list(), [version]);
+  const [, setVersion] = useState(0);
+  const users = usersDB.list();
   const [inviting, setInviting] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [draft, setDraft] = useState({

@@ -10,15 +10,25 @@ import type { ParsedContract } from '../../types';
 
 let pdfjsWorkerReady = true;
 
+function isLikelyMobile(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
 // Lazy-load pdfjs to keep the initial bundle slim
 async function loadPdfjs() {
-  const pdfjsLib = await import('pdfjs-dist');
+  const useLegacy = isLikelyMobile();
+  const pdfjsLib = useLegacy
+    ? await import('pdfjs-dist/legacy/build/pdf.mjs')
+    : await import('pdfjs-dist');
   // Use the legacy worker for compatibility
   try {
-    const worker = await import('pdfjs-dist/build/pdf.worker.mjs?url');
+    const worker = useLegacy
+      ? await import('pdfjs-dist/legacy/build/pdf.worker.mjs?url')
+      : await import('pdfjs-dist/build/pdf.worker.mjs?url');
     pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
     pdfjsWorkerReady = true;
-  } catch (err) {
+  } catch {
     // Mobile browsers or CSP can block module workers.
     // We'll fall back to main-thread parsing instead.
     pdfjsWorkerReady = false;
@@ -26,22 +36,22 @@ async function loadPdfjs() {
   return pdfjsLib;
 }
 
-function isLikelyMobile(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-}
-
 async function getPdfDocument(
   pdfjs: typeof import('pdfjs-dist'),
   data: ArrayBuffer,
 ) {
   try {
-    return await pdfjs.getDocument({
+    const params = {
       data,
       disableWorker: isLikelyMobile() ? true : !pdfjsWorkerReady,
-    }).promise;
-  } catch (err) {
-    return await pdfjs.getDocument({ data, disableWorker: true }).promise;
+    } as unknown as Record<string, unknown>;
+    return await pdfjs.getDocument(params).promise;
+  } catch {
+    const params = { data, disableWorker: true } as unknown as Record<
+      string,
+      unknown
+    >;
+    return await pdfjs.getDocument(params).promise;
   }
 }
 
@@ -249,7 +259,7 @@ export async function parseSupplierContract(
   let observations: string | undefined;
   if (obsIdx >= 0) {
     const collected: string[] = [];
-    let line = lines[obsIdx].replace(/^Obs\s*:\s*/i, '');
+    const line = lines[obsIdx].replace(/^Obs\s*:\s*/i, '');
     if (line) collected.push(line);
     for (let i = obsIdx + 1; i < lines.length; i++) {
       if (/^(Incoterm|Brand|Plant|Freight\s*cost|Insurance)/i.test(lines[i]))

@@ -23,16 +23,15 @@ import { loadDocumentBlob, saveDocumentBlob } from '../../lib/storage/files';
 import { computeFinancials } from '../../lib/finance';
 import { formatMoney, formatTons, formatUSD } from '../../lib/format';
 import { useAppStore } from '../../store/appStore';
-import { buildWarnings, WarningsList } from '../../components/trade/Warnings';
+import { WarningsList } from '../../components/trade/Warnings';
+import { buildWarnings } from '../../components/trade/warnings-helpers';
 import { sendContract } from '../../lib/email';
 import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
+import type { Trade } from '../../types';
 
 export function ContractEditorPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const user = useAppStore((s) => s.user);
-
   const trade = id ? tradesDB.byId(id) : undefined;
   if (!trade) {
     return (
@@ -41,6 +40,13 @@ export function ContractEditorPage() {
       </PageBody>
     );
   }
+
+  return <ContractEditorInner trade={trade} />;
+}
+
+function ContractEditorInner({ trade }: { trade: Trade }) {
+  const navigate = useNavigate();
+  const user = useAppStore((s) => s.user);
 
   const entities = useMemo(() => entitiesDB.list(), []);
   const banks = useMemo(() => banksDB.list(), []);
@@ -198,13 +204,13 @@ export function ContractEditorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trade.id, sourceVersion]);
   const [reuploading, setReuploading] = useState(false);
-  const reuploadError = useRef<string | null>(null);
+  const [reuploadError, setReuploadError] = useState<string | null>(null);
   const reuploadInputRef = useRef<HTMLInputElement>(null);
 
   const onReuploadSource = async (file: File) => {
     if (!user) return;
     setReuploading(true);
-    reuploadError.current = null;
+  setReuploadError(null);
     try {
       const ab = await file.arrayBuffer();
       const bytes = new Uint8Array(ab);
@@ -233,10 +239,11 @@ export function ContractEditorPage() {
       setSourceVersion((v) => v + 1);
     } catch (err) {
       const msg = (err as Error).message ?? '';
-      reuploadError.current =
+      setReuploadError(
         /quota/i.test(msg) || /exceeded/i.test(msg)
           ? 'Browser storage is full — clear demo data or configure Supabase to store large PDFs in the cloud.'
-          : msg || 'Could not save the file.';
+          : msg || 'Could not save the file.',
+      );
       // force a re-render so the error surfaces
       setSourceVersion((v) => v + 1);
     } finally {
@@ -547,9 +554,9 @@ export function ContractEditorPage() {
                   limit, network drop, or this trade was duplicated from
                   one missing the file). Re-attach it below to continue.
                 </p>
-                {reuploadError.current && (
+                {reuploadError && (
                   <div className="mt-2 text-xs text-danger-700">
-                    {reuploadError.current}
+                    {reuploadError}
                   </div>
                 )}
                 <div className="mt-3 flex items-center gap-3">

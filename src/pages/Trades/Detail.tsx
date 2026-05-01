@@ -34,18 +34,10 @@ import {
   formatUSD,
 } from '../../lib/format';
 import { useAppStore } from '../../store/appStore';
-import type { DocumentType, TradeDocument } from '../../types';
+import type { DocumentType, Trade, TradeDocument } from '../../types';
 
 export function TradeDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const user = useAppStore((s) => s.user);
-  const [version, setVersion] = useState(0);
-
-  useEffect(() => {
-    evaluateMilestones();
-  }, [version]);
-
   const trade = id ? tradesDB.byId(id) : undefined;
   if (!trade) {
     return (
@@ -54,6 +46,18 @@ export function TradeDetailPage() {
       </PageBody>
     );
   }
+
+  return <TradeDetailInner trade={trade} />;
+}
+
+function TradeDetailInner({ trade }: { trade: Trade }) {
+  const navigate = useNavigate();
+  const user = useAppStore((s) => s.user);
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    evaluateMilestones();
+  }, [version]);
 
   const isAdmin = user?.role === 'super_admin';
   const entity = entitiesDB.byId(trade.entity_id);

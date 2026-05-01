@@ -44,8 +44,7 @@ export function NewTradePage() {
 
   const entities = useMemo(() => entitiesDB.list(), []);
   const banks = useMemo(() => banksDB.list(), []);
-  const [clientsVersion, setClientsVersion] = useState(0);
-  const clients = useMemo(() => clientsDB.list(), [clientsVersion]);
+  const [clients, setClients] = useState(() => clientsDB.list());
   const contacts = useMemo(() => contactsDB.list(), []);
 
   // Default to the LLC entity if it exists, else first
@@ -79,17 +78,7 @@ export function NewTradePage() {
 
   const fileInput = useRef<HTMLInputElement>(null);
 
-  // Fast-flow autostart
-  const handoffStarted = useRef(false);
-  useEffect(() => {
-    if (handoff && !handoffStarted.current) {
-      handoffStarted.current = true;
-      handleFile(handoff);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handoff]);
-
-  const handleFile = async (f: File) => {
+  const handleFile = async function handleFile(f: File) {
     setFile(f);
     setParsing(true);
     setParseError(undefined);
@@ -138,9 +127,18 @@ export function NewTradePage() {
     }
   };
 
+  // Fast-flow autostart
+  const handoffStarted = useRef(false);
+  useEffect(() => {
+    if (handoff && !handoffStarted.current) {
+      handoffStarted.current = true;
+      handleFile(handoff);
+    }
+  }, [handoff]);
+
   const onCreateClientFromParsed = (newClient: Client) => {
     clientsDB.insert(newClient);
-    setClientsVersion((v) => v + 1);
+  setClients(clientsDB.list());
     setClientId(newClient.id);
     setAutoMatch({
       kind: 'matched',
@@ -316,6 +314,8 @@ export function NewTradePage() {
                   ref={fileInput}
                   type="file"
                   accept="application/pdf"
+                  aria-label="Upload supplier contract PDF"
+                  title="Upload supplier contract PDF"
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
