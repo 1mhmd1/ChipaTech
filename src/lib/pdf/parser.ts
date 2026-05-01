@@ -8,54 +8,7 @@
 
 import type { ParsedContract } from "../../types";
 
-let pdfjsWorkerReady = false;
-
-// Always use the legacy (ES5-compatible, core-js polyfilled) build.
-// The standard 'pdfjs-dist' build targets ES2025 / Node>=22 and uses
-// Array.prototype.at(), Object.hasOwn(), Promise.withResolvers() etc.
-// that are absent in iOS Safari <16, causing a runtime crash.
-async function loadPdfjs() {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  if (!pdfjsWorkerReady) {
-    try {
-      const worker = await import(
-        "pdfjs-dist/legacy/build/pdf.worker.mjs?url"
-      );
-      pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
-      pdfjsWorkerReady = true;
-    } catch {
-      // Worker URL resolution failed (CSP or older WebView).
-      // Empty string tells pdfjs to skip the worker and run inline.
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "";
-      pdfjsWorkerReady = false;
-    }
-  }
-  return pdfjsLib;
-}
-
-async function getPdfDocument(
-  pdfjs: typeof import("pdfjs-dist"),
-  data: ArrayBuffer,
-) {
-  // pdfjs is most reliable when given a Uint8Array (typed array) rather
-  // than a raw ArrayBuffer — older WebViews and iOS Safari handle the
-  // TypedArray path more consistently.
-  const typed = new Uint8Array(data);
-  const makeParams = (disableWorker: boolean) =>
-    ({
-      data: typed,
-      disableWorker,
-      isEvalSupported: false,
-      disableFontFace: true,
-      useSystemFonts: true,
-    } as unknown as Record<string, unknown>);
-  try {
-    return await pdfjs.getDocument(makeParams(!pdfjsWorkerReady)).promise;
-  } catch {
-    // Last-resort retry with worker fully disabled (handles iOS WKWebView)
-    return await pdfjs.getDocument(makeParams(true)).promise;
-  }
-}
+import { openPdfDocument } from "./pdfjs-loader";
 
 // Group text items by line based on Y coordinate, then sort by X
 interface LineItem {
@@ -64,8 +17,7 @@ interface LineItem {
 }
 
 async function extractLines(file: ArrayBuffer): Promise<string[]> {
-  const pdfjs = await loadPdfjs();
-  const doc = await getPdfDocument(pdfjs, file);
+  const doc = await openPdfDocument(file);
   const lines: string[] = [];
   const rawItems: string[] = [];
   const maxPages = doc.numPages; // Always process all pages on all devices
